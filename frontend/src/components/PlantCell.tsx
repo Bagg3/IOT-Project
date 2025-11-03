@@ -38,17 +38,28 @@ export function PlantCell({ cell, onSelect }: PlantCellProps) {
       type="button"
       onClick={() => onSelect(cell)}
       className={cn(
-        "flex h-full flex-col justify-between rounded-xl border border-slate-200 bg-white p-4 text-left shadow transition hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-brand-400",
+        "flex h-full flex-col justify-between rounded-lg border border-slate-200 bg-white p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-brand-400",
         status.tone
       )}
     >
-      <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-slate-500">
-        <span>
-          Row {cell.row} · Col {cell.column}
-        </span>
-        <Badge variant={status.variant}>{status.label}</Badge>
+      <div className="space-y-1.5">
+        <div className="flex items-start justify-between gap-1.5">
+          <div className="flex-1">
+            <div className="text-xs font-semibold text-slate-900">{cell.display_name || "Unknown"}</div>
+            <div className="text-xs text-slate-500">
+              R{cell.row}C{cell.column}
+            </div>
+          </div>
+          {cell.color && (
+            <div className="h-5 w-5 rounded border border-slate-200 shadow-sm" style={{ backgroundColor: cell.color }} />
+          )}
+        </div>
+        <Badge variant={status.variant} className="w-fit text-xs px-2 py-0.5">
+          {status.label}
+        </Badge>
       </div>
-      <div className="mt-4 space-y-2 text-sm text-slate-700">
+
+      <div className="mt-2 space-y-1 text-xs text-slate-700">
         <div className="flex items-center justify-between">
           <span className="font-medium text-slate-600">Moisture</span>
           <span className="font-semibold text-slate-900">{formatPercent(cell.moisturePercent)}</span>

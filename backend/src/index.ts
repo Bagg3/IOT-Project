@@ -1,12 +1,13 @@
 import express from "express";
 import cors from "cors";
 import type { Request, Response } from "express";
-import sensorRoutes from "./routes/sensors";
-import actuatorRoutes from "./routes/actuators";
-import dashboardRoutes from "./routes/dashboard";
+import { sensorController } from "./controllers/sensor-controller";
+import { actuatorController } from "./controllers/actuator-controller";
+import { dashboardController } from "./controllers/dashboard-controller";
 import { errorHandler } from "./middleware/error-handler";
 import { env } from "./config/env";
 import { runMigrations } from "./lib/migrate";
+import { startMqttClient } from "./integrations/mqtt-client";
 
 const app = express();
 
@@ -21,14 +22,15 @@ app.get("/health", (_request: Request, response: Response) => {
   response.json({ status: "ok" });
 });
 
-app.use("/api", sensorRoutes);
-app.use("/api", actuatorRoutes);
-app.use("/api", dashboardRoutes);
+app.use("/api", sensorController);
+app.use("/api", actuatorController);
+app.use("/api", dashboardController);
 
 app.use(errorHandler);
 
 async function bootstrap(): Promise<void> {
   await runMigrations();
+  startMqttClient();
 
   app.listen(env.PORT, () => {
     console.log(`🚀 Backend running on http://localhost:${env.PORT}`);

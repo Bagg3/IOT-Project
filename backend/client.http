@@ -1,0 +1,57 @@
+@baseUrl = http://localhost:3000
+@apiBase = {{baseUrl}}/api
+@rackId = 00000000-0000-0000-0000-000000000101
+@commandId = 00000000-0000-0000-0000-000000000001
+
+### Health check
+GET {{baseUrl}}/health
+
+### List racks
+GET {{apiBase}}/dashboard/racks
+
+### Latest sensor readings for a rack
+GET {{apiBase}}/sensor-readings/latest/{{rackId}}
+
+### Sensor history for a single position and type
+GET {{apiBase}}/sensor-readings/history?rack_id={{rackId}}&row=1&column=1&sensor_type=moisture_sensor&hours=6
+
+### Ingest a new sensor reading
+POST {{apiBase}}/sensor-readings
+Content-Type: application/json
+
+{
+	"rack_id": "{{rackId}}",
+	"row": 1,
+	"column": 1,
+	"sensor_type": "moisture_sensor",
+	"value": {
+		"value": 56,
+		"unit": "percent"
+	}
+}
+
+### Create an actuator command
+POST {{apiBase}}/actuator-commands
+Content-Type: application/json
+
+{
+	"rack_id": "{{rackId}}",
+	"row": 1,
+	"column": 1,
+	"actuator_type": "water_pump",
+	"action": "water",
+	"parameters": {
+		"duration_seconds": 10
+	}
+}
+
+### List pending actuator commands
+GET {{apiBase}}/actuator-commands/pending
+
+### Update actuator command status
+PATCH {{apiBase}}/actuator-commands/{{commandId}}
+Content-Type: application/json
+
+{
+	"status": "completed"
+}

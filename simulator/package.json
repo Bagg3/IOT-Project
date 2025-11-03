@@ -3,14 +3,6 @@
   "version": "0.1.0",
   "description": "Device simulator for GreenGrow racks",
   "type": "module",
-  "scripts": {
-    "dev": "bun run --watch src/simulator.ts",
-    "start": "bun run src/simulator.ts"
-  },
-  "dependencies": {
-    "mqtt": "^5.3.4",
-    "zod": "^3.23.8"
-  },
   "devDependencies": {
     "@types/node": "^20.11.19"
   }

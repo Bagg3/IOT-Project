@@ -51,10 +51,31 @@ export type ActuatorRow = {
   actuator_type_id: string;
 };
 
+async function resolveFallbackRackIdentifier(client: Queryable): Promise<string> {
+  const fallback = await client.query<{ id: string } & QueryResultRow>(
+    `SELECT id::text AS id
+     FROM racks
+     ORDER BY rack_number ASC
+     LIMIT 1`
+  );
+
+  if (fallback.rowCount === 0) {
+    throw new Error("No racks available to resolve fallback identifier");
+  }
+
+  return fallback.rows[0].id;
+}
+
 export async function resolveRack(
   client: Queryable,
   rackIdOrNumber: string
 ): Promise<ResolvedRack> {
+  let lookupValue = rackIdOrNumber;
+
+  if (lookupValue === "0") {
+    lookupValue = await resolveFallbackRackIdentifier(client);
+  }
+
   const result = await client.query<ResolvedRack & QueryResultRow>(
     `SELECT
        r.id,
@@ -67,7 +88,7 @@ export async function resolveRack(
      JOIN farms f ON f.id = r.farm_id
      WHERE r.id::text = $1 OR r.rack_number::text = $1
      LIMIT 1`,
-    [rackIdOrNumber]
+    [lookupValue]
   );
 
   if (result.rowCount === 0) {

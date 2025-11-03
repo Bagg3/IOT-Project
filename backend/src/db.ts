@@ -12,7 +12,7 @@ export const pool = new Pool({
 });
 
 pool.on("error", (error: Error) => {
-  console.error("❌ Unexpected database error", error);
+  console.error("Unexpected database error", error);
 });
 
 export async function withConnection<T>(handler: (client: Pool) => Promise<T>): Promise<T> {

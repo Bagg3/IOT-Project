@@ -6,7 +6,7 @@ import { actuatorController } from "./controllers/actuator-controller";
 import { dashboardController } from "./controllers/dashboard-controller";
 import { errorHandler } from "./middleware/error-handler";
 import { env } from "./config/env";
-import { runMigrations } from "./lib/migrate";
+import { runMigrationsAndSeed } from "./lib/migrate";
 import { startMqttClient } from "./integrations/mqtt-client";
 
 const app = express();
@@ -29,7 +29,7 @@ app.use("/api", dashboardController);
 app.use(errorHandler);
 
 async function bootstrap(): Promise<void> {
-  await runMigrations();
+  await runMigrationsAndSeed();
   startMqttClient();
 
   app.listen(env.PORT, () => {

@@ -89,6 +89,7 @@ async function pollActuatorCommands(): Promise<void> {
     const commands: Array<{
       id: string;
       rack_id: string;
+      rack_number: number;
       row: number;
       column: number;
       actuator_type: string;
@@ -104,7 +105,7 @@ async function pollActuatorCommands(): Promise<void> {
       const topic = `greengrow/farm_001/${command.rack_id}/${command.row}/${command.column}/${command.actuator_type}/${command.action}`;
       mqttClient.publish(topic, JSON.stringify(parameters));
       await markCommandStatus(command.id, "sent");
-      console.log(`⬅️ Published command ${command.id} to ${topic}`);
+      console.log(`⬅️ Published Rack ${command.rack_number} command ${command.id} to ${topic}`);
     }
   } catch (error) {
     console.error("❌ Error while polling actuator commands", error);

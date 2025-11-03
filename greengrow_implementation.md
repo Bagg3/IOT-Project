@@ -129,10 +129,15 @@ bun add -d @types/express @types/cors @types/pg
 backend/
 ├── src/
 │   ├── db.ts
-│   ├── routes/
+│   ├── controller/
 │   │   ├── sensors.ts
 │   │   ├── actuators.ts
 │   │   └── dashboard.ts
+│   ├── service/
+│   │   ├── sensors.ts
+│   │   ├── actuators.ts
+│   │   └── dashboard.ts
+│   ├── mqtt-client.ts
 │   └── index.ts
 └── package.json
 ```

@@ -11,6 +11,7 @@ export type CreateSensorReadingInput = {
 export type SensorReadingRecord = {
   id: string;
   rack_id: string;
+  rack_number: number;
   row: number;
   column: number;
   sensor_type: string;
@@ -47,7 +48,15 @@ export async function createSensorReading(
   const result = await pool.query<SensorReadingRecord>(
     `INSERT INTO sensor_readings (rack_id, "row", "column", sensor_type, value)
      VALUES ($1, $2, $3, $4, $5)
-     RETURNING id, rack_id, "row", "column", sensor_type, value::json AS value, timestamp`,
+     RETURNING
+       id,
+       rack_id,
+       (SELECT rack_number FROM racks WHERE racks.id = sensor_readings.rack_id) AS rack_number,
+       "row",
+       "column",
+       sensor_type,
+       value::json AS value,
+       timestamp`,
     [
       input.rack_id,
       input.row,
@@ -66,17 +75,19 @@ export async function createSensorReading(
 
 export async function getLatestSensorReadings(rackId: string): Promise<SensorReadingRecord[]> {
   const result = await pool.query<SensorReadingRecord>(
-    `SELECT DISTINCT ON ("row", "column", sensor_type)
-       id,
-       rack_id,
-       "row",
-       "column",
-       sensor_type,
-       value::json AS value,
-       timestamp
-     FROM sensor_readings
-     WHERE rack_id = $1
-     ORDER BY "row", "column", sensor_type, timestamp DESC`,
+    `SELECT DISTINCT ON (sr."row", sr."column", sr.sensor_type)
+       sr.id,
+       sr.rack_id,
+       r.rack_number,
+       sr."row",
+       sr."column",
+       sr.sensor_type,
+       sr.value::json AS value,
+       sr.timestamp
+     FROM sensor_readings sr
+     JOIN racks r ON r.id = sr.rack_id
+     WHERE sr.rack_id = $1
+     ORDER BY sr."row", sr."column", sr.sensor_type, sr.timestamp DESC`,
     [rackId]
   );
 
@@ -95,20 +106,22 @@ export async function getSensorReadingHistory(params: {
 }): Promise<SensorReadingRecord[]> {
   const result = await pool.query<SensorReadingRecord>(
     `SELECT
-       id,
-       rack_id,
-       "row",
-       "column",
-       sensor_type,
-       value::json AS value,
-       timestamp
-     FROM sensor_readings
-     WHERE rack_id = $1
-       AND "row" = $2
-       AND "column" = $3
-       AND sensor_type = $4
-       AND timestamp > NOW() - ($5 || ' hours')::INTERVAL
-     ORDER BY timestamp DESC`,
+       sr.id,
+       sr.rack_id,
+       r.rack_number,
+       sr."row",
+       sr."column",
+       sr.sensor_type,
+       sr.value::json AS value,
+       sr.timestamp
+     FROM sensor_readings sr
+     JOIN racks r ON r.id = sr.rack_id
+     WHERE sr.rack_id = $1
+       AND sr."row" = $2
+       AND sr."column" = $3
+       AND sr.sensor_type = $4
+       AND sr.timestamp > NOW() - ($5 || ' hours')::INTERVAL
+     ORDER BY sr.timestamp DESC`,
     [params.rack_id, params.row, params.column, params.sensor_type, params.hours]
   );
 

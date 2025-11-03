@@ -12,6 +12,7 @@ export type CreateActuatorCommandInput = {
 export type ActuatorCommandRecord = {
   id: string;
   rack_id: string;
+  rack_number: number;
   row: number;
   column: number;
   actuator_type: string;
@@ -68,6 +69,7 @@ export async function createActuatorCommand(
      RETURNING
        id,
        rack_id,
+       (SELECT rack_number FROM racks WHERE racks.id = actuator_commands.rack_id) AS rack_number,
        "row",
        "column",
        actuator_type,
@@ -105,6 +107,7 @@ export async function getPendingActuatorCommands(): Promise<ActuatorCommandRecor
     `SELECT
        id,
        rack_id,
+       (SELECT rack_number FROM racks WHERE racks.id = actuator_commands.rack_id) AS rack_number,
        "row",
        "column",
        actuator_type,
@@ -134,6 +137,7 @@ export async function updateActuatorCommandStatus(
      RETURNING
        id,
        rack_id,
+       (SELECT rack_number FROM racks WHERE racks.id = actuator_commands.rack_id) AS rack_number,
        "row",
        "column",
        actuator_type,

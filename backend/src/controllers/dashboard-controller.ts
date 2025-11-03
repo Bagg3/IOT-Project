@@ -1,5 +1,5 @@
 import { Router, type NextFunction, type Request, type Response } from "express";
-import { getRacks } from "../services/dashboard-service";
+import { getDashboardSnapshot, getRacks } from "../services/dashboard-service";
 
 const router = Router();
 
@@ -9,6 +9,18 @@ router.get(
     try {
       const racks = await getRacks();
       response.json(racks);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+router.get(
+  "/dashboard/overview",
+  async (_request: Request, response: Response, next: NextFunction) => {
+    try {
+      const snapshot = await getDashboardSnapshot();
+      response.json(snapshot);
     } catch (error) {
       next(error);
     }

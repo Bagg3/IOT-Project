@@ -121,9 +121,9 @@ async function selectReadings(
   parameters: unknown[],
   distinctLatest: boolean
 ): Promise<SensorReadingRecord[]> {
-  const distinct = distinctLatest ? "DISTINCT ON (sr.row, sr.column, sr.sensor_type)" : "";
+  const distinct = distinctLatest ? "DISTINCT ON (sr.\"row\", sr.\"column\", sr.sensor_type)" : "";
   const orderByLatest = distinctLatest
-    ? "ORDER BY sr.row, sr.column, sr.sensor_type, sr.recorded_at DESC"
+    ? "ORDER BY sr.\"row\", sr.\"column\", sr.sensor_type, sr.recorded_at DESC"
     : "ORDER BY sr.recorded_at DESC";
 
   const query = `
@@ -132,8 +132,8 @@ async function selectReadings(
       COALESCE(r.rack_identifier, r.id::text) AS rack_id,
       r.rack_number,
       COALESCE(f.farm_identifier, f.id::text) AS farm_id,
-      sr.row,
-      sr.column,
+      sr."row" AS row,
+      sr."column" AS column,
       sr.sensor_type,
       sr.sensor_id,
       s.sensor_name,
@@ -152,7 +152,7 @@ async function selectReadings(
     JOIN racks r ON r.id = sr.rack_id
     JOIN farms f ON f.id = r.farm_id
     LEFT JOIN sensors s ON s.id = sr.sensor_id
-    LEFT JOIN plant_locations pl ON pl.rack_id = r.id AND pl.row = sr.row AND pl.column = sr.column
+  LEFT JOIN plant_locations pl ON pl.rack_id = r.id AND pl.row = sr."row" AND pl.column = sr."column"
     LEFT JOIN LATERAL (
       SELECT p_inner.*
       FROM plants p_inner
@@ -195,8 +195,8 @@ export async function createSensorReading(
     const insertResult = await client.query<{ id: string } & QueryResultRow>(
       `INSERT INTO sensor_readings (
          rack_id,
-         row,
-         column,
+         "row",
+         "column",
          sensor_type,
          value,
          sensor_id,
@@ -260,8 +260,8 @@ export async function getSensorReadingHistory(params: {
     return await selectReadings(
       client,
       `sr.rack_id = $1
-       AND sr.row = $2
-       AND sr.column = $3
+       AND sr."row" = $2
+       AND sr."column" = $3
        AND sr.sensor_type = $4
        AND sr.recorded_at > NOW() - ($5 || ' hours')::INTERVAL`,
       [rack.id, params.row, params.column, params.sensor_type, params.hours],

@@ -43,11 +43,11 @@ async function ensurePlantLocationGrid(
   columns: number
 ): Promise<void> {
   await pool.query(
-    `INSERT INTO plant_locations (rack_id, row, column)
+    `INSERT INTO plant_locations (rack_id, "row", "column")
      SELECT $1, row_series, col_series
      FROM generate_series(1, $2) AS row_series
      CROSS JOIN generate_series(1, $3) AS col_series
-     ON CONFLICT (rack_id, row, column) DO NOTHING`,
+     ON CONFLICT (rack_id, "row", "column") DO NOTHING`,
     [rackId, rows, columns]
   );
 }

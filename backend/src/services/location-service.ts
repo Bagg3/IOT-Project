@@ -91,11 +91,11 @@ export async function ensurePlantLocation(
   column: number
 ): Promise<PlantLocationRow> {
   const result = await client.query<PlantLocationRow & QueryResultRow>(
-    `INSERT INTO plant_locations (rack_id, row, column)
+    `INSERT INTO plant_locations (rack_id, "row", "column")
      VALUES ($1, $2, $3)
-     ON CONFLICT (rack_id, row, column)
+     ON CONFLICT (rack_id, "row", "column")
      DO UPDATE SET updated_at = NOW()
-     RETURNING id, rack_id, row, column, is_occupied`,
+     RETURNING id, rack_id, "row" AS row, "column" AS column, is_occupied`,
     [rackId, row, column]
   );
 

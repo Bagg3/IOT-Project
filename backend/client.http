@@ -1,33 +1,174 @@
 @baseUrl = http://localhost:3000
 @apiBase = {{baseUrl}}/api
+@farmIdentifier = farm_001
 @rackId = 00000000-0000-0000-0000-000000000101
-@commandId = 00000000-0000-0000-0000-000000000001
+@rackIdentifier = rack_001
+@plantIdentifier = plant_0001
+@speciesIdentifier = species_001
+@commandId = 00000000-0000-0000-0000-000000000401
+@row = 1
+@column = 1
 
-### Health check
+### Health
 GET {{baseUrl}}/health
 
-### List racks
+### Dashboard
 GET {{apiBase}}/dashboard/racks
 
-### Latest sensor readings for a rack
+### Dashboard overview snapshot
+GET {{apiBase}}/dashboard/overview
+
+### Farms
+GET {{apiBase}}/farms
+
+### Get a single farm
+GET {{apiBase}}/farms/{{farmIdentifier}}
+
+### Create a farm
+POST {{apiBase}}/farms
+Content-Type: application/json
+
+{
+  "farm_identifier": "{{farmIdentifier}}",
+  "farm_name": "Downtown Indoor Farm",
+  "address": "123 Greenhouse Ave"
+}
+
+### Update a farm
+PATCH {{apiBase}}/farms/{{farmIdentifier}}
+Content-Type: application/json
+
+{
+  "farm_name": "Downtown Indoor Farm (North Wing)",
+  "address": "123 Greenhouse Ave, Floor 2"
+}
+
+### Delete a farm
+DELETE {{apiBase}}/farms/{{farmIdentifier}}
+
+### List racks for a farm
+GET {{apiBase}}/farms/{{farmIdentifier}}/racks
+
+### Racks
+GET {{apiBase}}/racks
+
+### Get a single rack
+GET {{apiBase}}/racks/{{rackIdentifier}}
+
+### Create a rack
+POST {{apiBase}}/racks
+Content-Type: application/json
+
+{
+  "farm_id": "{{farmIdentifier}}",
+  "rack_number": 4,
+  "rack_name": "North Rack 4",
+  "rows": 5,
+  "columns": 5
+}
+
+### Update a rack
+PATCH {{apiBase}}/racks/{{rackIdentifier}}
+Content-Type: application/json
+
+{
+  "rack_name": "North Rack 4A",
+  "max_rows": 6,
+  "max_columns": 6
+}
+
+### Delete a rack
+DELETE {{apiBase}}/racks/{{rackIdentifier}}
+
+### Plant locations for a rack
+GET {{apiBase}}/plant-locations/{{rackIdentifier}}
+
+### Species
+GET {{apiBase}}/species
+
+### Get a single species
+GET {{apiBase}}/species/{{speciesIdentifier}}
+
+### Create a species
+POST {{apiBase}}/species
+Content-Type: application/json
+
+{
+  "species_identifier": "{{speciesIdentifier}}",
+  "species_name": "Butterhead Lettuce",
+  "scientific_name": "Lactuca sativa",
+  "optimal_moisture_min": 45,
+  "optimal_moisture_max": 65,
+  "growth_duration_days": 42
+}
+
+### Update a species
+PATCH {{apiBase}}/species/{{speciesIdentifier}}
+Content-Type: application/json
+
+{
+  "optimal_light_intensity_min": 300,
+  "optimal_light_intensity_max": 600
+}
+
+### Delete a species
+DELETE {{apiBase}}/species/{{speciesIdentifier}}
+
+### Plants
+GET {{apiBase}}/plants
+
+### List plants by rack and status
+GET {{apiBase}}/plants?rack_id={{rackIdentifier}}&status=growing
+
+### Get a single plant
+GET {{apiBase}}/plants/{{plantIdentifier}}
+
+### Create a plant
+POST {{apiBase}}/plants
+Content-Type: application/json
+
+{
+  "rack_id": "{{rackIdentifier}}",
+  "row": {{row}},
+  "column": {{column}},
+  "species_id": "{{speciesIdentifier}}",
+  "display_name": "Butterhead Lettuce A1",
+  "planted_on": "2025-01-15",
+  "notes": "Transplanted from nursery tray."
+}
+
+### Update a plant
+PATCH {{apiBase}}/plants/{{plantIdentifier}}
+Content-Type: application/json
+
+{
+  "status": "harvested",
+  "harvested_on": "2025-03-02",
+  "notes": "Ready for shipment."
+}
+
+### Delete a plant
+DELETE {{apiBase}}/plants/{{plantIdentifier}}
+
+### Sensor readings (latest per rack)
 GET {{apiBase}}/sensor-readings/latest/{{rackId}}
 
-### Sensor history for a single position and type
-GET {{apiBase}}/sensor-readings/history?rack_id={{rackId}}&row=1&column=1&sensor_type=moisture_sensor&hours=6
+### Sensor history for a location and sensor type
+GET {{apiBase}}/sensor-readings/history?rack_id={{rackId}}&row={{row}}&column={{column}}&sensor_type=moisture_sensor&hours=6
 
 ### Ingest a new sensor reading
 POST {{apiBase}}/sensor-readings
 Content-Type: application/json
 
 {
-	"rack_id": "{{rackId}}",
-	"row": 1,
-	"column": 1,
-	"sensor_type": "moisture_sensor",
-	"value": {
-		"value": 56,
-		"unit": "percent"
-	}
+  "rack_id": "{{rackId}}",
+  "row": {{row}},
+  "column": {{column}},
+  "sensor_type": "moisture_sensor",
+  "value": {
+    "value": 56,
+    "unit": "percent"
+  }
 }
 
 ### Create an actuator command
@@ -35,14 +176,14 @@ POST {{apiBase}}/actuator-commands
 Content-Type: application/json
 
 {
-	"rack_id": "{{rackId}}",
-	"row": 1,
-	"column": 1,
-	"actuator_type": "water_pump",
-	"action": "water",
-	"parameters": {
-		"duration_seconds": 10
-	}
+  "rack_id": "{{rackId}}",
+  "row": {{row}},
+  "column": {{column}},
+  "actuator_type": "water_pump",
+  "action": "water",
+  "parameters": {
+    "duration_seconds": 10
+  }
 }
 
 ### List pending actuator commands
@@ -53,5 +194,5 @@ PATCH {{apiBase}}/actuator-commands/{{commandId}}
 Content-Type: application/json
 
 {
-	"status": "completed"
+  "status": "completed"
 }

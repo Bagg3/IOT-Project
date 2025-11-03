@@ -8,6 +8,11 @@ import { errorHandler } from "./middleware/error-handler";
 import { env } from "./config/env";
 import { runMigrationsAndSeed } from "./lib/migrate";
 import { startMqttClient } from "./integrations/mqtt-client";
+import { plantController } from "./controllers/plant-controller";
+import { speciesController } from "./controllers/species-controller";
+import { farmController } from "./controllers/farm-controller";
+import { rackController } from "./controllers/rack-controller";
+import { plantLocationController } from "./controllers/plant-location-controller";
 
 const app = express();
 
@@ -25,6 +30,11 @@ app.get("/health", (_request: Request, response: Response) => {
 app.use("/api", sensorController);
 app.use("/api", actuatorController);
 app.use("/api", dashboardController);
+app.use("/api", plantController);
+app.use("/api", speciesController);
+app.use("/api", farmController);
+app.use("/api", rackController);
+app.use("/api", plantLocationController);
 
 app.use(errorHandler);
 

@@ -54,10 +54,31 @@ services:
     environment:
       NODE_ENV: development
       SENSOR_SCRIPT_PATH: /app/simulator/src/
-      MQTT_URL: mqtt://mosquitto:1883  
+      MQTT_URL: mqtt://mosquitto:1883
     depends_on:
       - mosquitto
       - postgres
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: greengrow_backend
+    restart: unless-stopped
+    environment:
+      PORT: "3000"
+      DATABASE_HOST: postgres
+      DATABASE_PORT: "5432"
+      DATABASE_NAME: greengrow
+      DATABASE_USER: greengrow
+      DATABASE_PASSWORD: password
+      MQTT_URL: mqtt://mosquitto:1883
+      CORS_ORIGIN: "*"
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+      - mosquitto
 
 volumes:
   postgres_data:

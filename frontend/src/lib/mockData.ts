@@ -1,4 +1,4 @@
-import type { Plant, RackSummary } from "./api";
+import type { Plant, RackSummary, HistoricalDataPoint } from "./types";
 
 /**
  * Mock racks for development
@@ -78,15 +78,6 @@ export function generateMockPlants(): Plant[] {
       light_level: Math.max(30, Math.min(95, plant.light_level! + lightVariation))
     };
   });
-}
-
-/**
- * Historical data point for a plant
- */
-export interface HistoricalDataPoint {
-  timestamp: string;
-  moisture: number;
-  light: number;
 }
 
 /**

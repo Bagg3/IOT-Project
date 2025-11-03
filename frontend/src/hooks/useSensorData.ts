@@ -3,8 +3,7 @@ import {
   fetchLatestSensorReadings,
   mapReadingsToCells,
   type CellSnapshot,
-  type Plant,
-  type SensorReading
+  type Plant
 } from "../lib/api";
 
 /**

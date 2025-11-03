@@ -203,14 +203,20 @@ function buildSensorSnapshot(
   recordedAt: string | null,
   rawValue: unknown,
   readingValue: number | null,
-  quality: string | null
+  quality: string | null,
+  sensorType?: string
 ): SensorSnapshot | undefined {
   if (!recordedAt) {
     return undefined;
   }
 
   const payload = parseJson(rawValue);
-  const value = extractNumeric(payload, readingValue);
+  let value = extractNumeric(payload, readingValue);
+
+  // Scale moisture sensor readings to percentage
+  if (sensorType === "moisture_sensor" && value !== null) {
+    value = value * 100;
+  }
 
   return {
     recorded_at: recordedAt,
@@ -376,7 +382,8 @@ export async function getRackSnapshots(rackIdentifier?: string): Promise<RackSna
       row.moisture_recorded_at,
       row.moisture_value,
       row.moisture_reading_value,
-      row.moisture_quality_flag
+      row.moisture_quality_flag,
+      "moisture_sensor"
     );
     if (moisture) {
       sensors.moisture_sensor = moisture;
@@ -386,7 +393,8 @@ export async function getRackSnapshots(rackIdentifier?: string): Promise<RackSna
       row.light_recorded_at,
       row.light_value,
       row.light_reading_value,
-      row.light_quality_flag
+      row.light_quality_flag,
+      "light_sensor"
     );
     if (light) {
       sensors.light_sensor = light;
@@ -396,7 +404,8 @@ export async function getRackSnapshots(rackIdentifier?: string): Promise<RackSna
       row.color_recorded_at,
       row.color_value,
       row.color_reading_value,
-      row.color_quality_flag
+      row.color_quality_flag,
+      "color_camera"
     );
     if (color) {
       sensors.color_camera = color;
@@ -474,12 +483,8 @@ export async function getPlantLocationHistory(
   rackIdentifier: string,
   row: number,
   column: number,
-  hours: number
+  options: { from?: Date; to?: Date; hours?: number } = {}
 ): Promise<HistoricalDataPoint[]> {
-  if (hours <= 0) {
-    return [];
-  }
-
   const rack = await resolveRack(pool, rackIdentifier);
   const location = await ensurePlantLocation(pool, rack.id, row, column);
 
@@ -504,9 +509,27 @@ export async function getPlantLocationHistory(
   const now = new Date();
   const plantedAt = parseDateAtMidnight(plant.planted_on) ?? now;
   const harvestedAt = plant.harvested_on ? parseDateAtMidnight(plant.harvested_on) : null;
-  const hoursAgo = new Date(now.getTime() - hours * 60 * 60 * 1000);
-  const start = plantedAt > hoursAgo ? plantedAt : hoursAgo;
-  const end = harvestedAt && harvestedAt < now ? harvestedAt : now;
+
+  const effectiveHours = options.from || options.to ? undefined : options.hours ?? 24;
+
+  if (effectiveHours !== undefined && effectiveHours <= 0) {
+    return [];
+  }
+
+  let start = options.from ?? (effectiveHours ? new Date(now.getTime() - effectiveHours * 60 * 60 * 1000) : plantedAt);
+  let end = options.to ?? now;
+
+  if (start < plantedAt) {
+    start = plantedAt;
+  }
+
+  if (harvestedAt && harvestedAt < end) {
+    end = harvestedAt;
+  }
+
+  if (end < start) {
+    return [];
+  }
 
   const readings = await pool.query<HistoricalRow>(
     `SELECT recorded_at, LOWER(sensor_type) AS sensor_type, reading_value, value
@@ -535,7 +558,7 @@ export async function getPlantLocationHistory(
     const value = extractNumeric(payload, rowData.reading_value);
 
     if (rowData.sensor_type === "moisture_sensor") {
-      existing.moisture = value;
+      existing.moisture = value === null ? null : value * 100;
     } else if (rowData.sensor_type === "light_sensor") {
       existing.light = value;
     }

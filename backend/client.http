@@ -19,8 +19,14 @@ GET {{apiBase}}/racks/{{rackId}}
 ### Rack Plant Readings
 GET {{apiBase}}/racks/{{rackId}}/plants
 
-### Rack Location History
-GET {{apiBase}}/racks/{{rackId}}/locations/{{row}}/{{column}}/history?hours={{hours}}
+### Rack Location History (default: last 24 hours)
+GET {{apiBase}}/racks/{{rackId}}/locations/{{row}}/{{column}}/history
+
+### Rack Location History (last 4 hours)
+GET {{apiBase}}/racks/{{rackId}}/locations/{{row}}/{{column}}/history?hours=4
+
+### Rack Location History (custom time range)
+GET {{apiBase}}/racks/{{rackId}}/locations/{{row}}/{{column}}/history?from=2025-11-03T00:00:00Z&to=2025-11-03T12:00:00Z
 
 ### Plants
 POST {{apiBase}}/racks/{{rackId}}/locations/{{row}}/{{column}}/plants

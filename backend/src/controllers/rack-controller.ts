@@ -65,12 +65,14 @@ router.get(
 
 const historyParamsSchema = z.object({
   rackId: z.string().trim().min(1),
-  row: z.coerce.number().int().positive(),
-  column: z.coerce.number().int().positive()
+  row: z.coerce.number().int().min(0),
+  column: z.coerce.number().int().min(0)
 });
 
 const historyQuerySchema = z.object({
-  hours: z.coerce.number().int().positive().max(720).default(24)
+  from: z.coerce.date().optional(),
+  to: z.coerce.date().optional(),
+  hours: z.coerce.number().int().positive().max(720).optional()
 });
 
 router.get(
@@ -78,9 +80,13 @@ router.get(
   async (request: Request, response: Response, next: NextFunction) => {
     try {
       const params = historyParamsSchema.parse(request.params);
-      const { hours } = historyQuerySchema.parse(request.query);
+      const { from, to, hours } = historyQuerySchema.parse(request.query);
 
-      const history = await getPlantLocationHistory(params.rackId, params.row, params.column, hours);
+      const history = await getPlantLocationHistory(params.rackId, params.row, params.column, {
+        from: from ?? undefined,
+        to: to ?? undefined,
+        hours: hours ?? (from || to ? undefined : 24)
+      });
       response.json(history);
     } catch (error) {
       if (error instanceof Error && error.message.toLowerCase().includes("rack not found")) {

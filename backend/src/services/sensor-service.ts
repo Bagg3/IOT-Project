@@ -129,9 +129,9 @@ async function selectReadings(
   const query = `
     SELECT ${distinct}
       sr.id,
-      COALESCE(r.rack_identifier, r.id::text) AS rack_id,
+      r.id::text AS rack_id,
       r.rack_number,
-      COALESCE(f.farm_identifier, f.id::text) AS farm_id,
+      f.id::text AS farm_id,
       sr."row" AS row,
       sr."column" AS column,
       sr.sensor_type,

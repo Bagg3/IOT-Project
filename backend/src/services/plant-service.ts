@@ -1,33 +1,25 @@
 import type { QueryResultRow } from "pg";
 import { pool } from "../db";
-import {
-  resolveRack,
-  resolveFarmByIdentifier,
-  ensurePlantLocation
-} from "./location-service";
+import { resolveRack, resolveFarm, ensurePlantLocation } from "./location-service";
 import type { Queryable } from "./location-service";
 import { resolveSpecies } from "./species-service";
 
 export type PlantRecord = {
   id: string;
-  plant_identifier: string | null;
   display_name: string | null;
   status: string;
   planted_on: string;
   harvested_on: string | null;
   notes: string | null;
   species_id: string;
-  species_identifier: string | null;
   species_name: string;
   species_scientific_name: string | null;
   plant_location_id: string;
   row: number;
   column: number;
   rack_id: string;
-  rack_identifier: string | null;
   rack_number: number;
   farm_id: string;
-  farm_identifier: string | null;
   farm_name: string;
   created_at: string;
   updated_at: string;
@@ -88,14 +80,10 @@ function normalizeStatus(status?: string | null): string {
 function mapPlant(row: PlantRow): PlantRecord {
   return {
     ...row,
-    plant_identifier: row.plant_identifier,
     display_name: row.display_name,
     status: row.status,
     notes: row.notes,
-    species_identifier: row.species_identifier,
-    species_scientific_name: row.species_scientific_name,
-    rack_identifier: row.rack_identifier,
-    farm_identifier: row.farm_identifier
+    species_scientific_name: row.species_scientific_name
   };
 }
 
@@ -104,14 +92,12 @@ function plantsBaseQuery(whereClause?: string): string {
 
   return `SELECT
       p.id,
-      p.plant_identifier,
       p.display_name,
       p.status,
       p.planted_on::text AS planted_on,
       p.harvested_on::text AS harvested_on,
       p.notes,
       p.species_id,
-      sp.species_identifier,
       sp.species_name,
       sp.scientific_name AS species_scientific_name,
       p.plant_location_id,
@@ -122,10 +108,8 @@ function plantsBaseQuery(whereClause?: string): string {
       COALESCE(sensor_counts.count, 0) AS sensor_count,
       COALESCE(actuator_counts.count, 0) AS actuator_count,
       r.id::text AS rack_id,
-      COALESCE(r.rack_identifier, r.id::text) AS rack_identifier,
       r.rack_number,
       f.id::text AS farm_id,
-      COALESCE(f.farm_identifier, f.id::text) AS farm_identifier,
       f.farm_name
     FROM plants p
     JOIN species sp ON sp.id = p.species_id
@@ -150,13 +134,13 @@ async function fetchMinimalPlant(identifier: string, client: Queryable = pool): 
   const result = await client.query<PlantMinimal & QueryResultRow>(
     `SELECT id, plant_location_id, status, planted_on::text AS planted_on, harvested_on::text AS harvested_on
      FROM plants
-     WHERE id::text = $1 OR plant_identifier = $1
+     WHERE id::text = $1
      LIMIT 1`,
     [identifier]
   );
 
   if (result.rows.length === 0) {
-    throw new Error(`Plant not found for identifier ${identifier}`);
+    throw new Error(`Plant not found for id ${identifier}`);
   }
 
   return result.rows[0];
@@ -167,7 +151,7 @@ export async function listPlants(filters: PlantFilters = {}): Promise<PlantRecor
   const parameters: unknown[] = [];
 
   if (filters.farm_id) {
-    const farm = await resolveFarmByIdentifier(pool, filters.farm_id);
+  const farm = await resolveFarm(pool, filters.farm_id);
     parameters.push(farm.id);
     conditions.push(`f.id = $${parameters.length}`);
   }
@@ -197,7 +181,7 @@ export async function listPlants(filters: PlantFilters = {}): Promise<PlantRecor
 
 export async function getPlant(identifier: string): Promise<PlantRecord | null> {
   const result = await pool.query<PlantRow>(
-    `${plantsBaseQuery("p.id::text = $1 OR p.plant_identifier = $1")} LIMIT 1`,
+    `${plantsBaseQuery("p.id::text = $1")} LIMIT 1`,
     [identifier]
   );
 
@@ -281,7 +265,7 @@ export async function updatePlant(identifier: string, input: UpdatePlantInput): 
   try {
     await client.query("BEGIN");
 
-    const existing = await fetchMinimalPlant(identifier, client);
+  const existing = await fetchMinimalPlant(identifier, client);
     const status = normalizeStatus(input.status ?? existing.status);
     const plantedOn = input.planted_on ?? new Date(existing.planted_on);
 

@@ -1,17 +1,22 @@
 import type { CellSnapshot, RackSummary } from "../lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { PlantCell } from "./PlantCell";
+import { Badge } from "./ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 
 interface RackGridProps {
+  racks: RackSummary[];
   rack?: RackSummary;
+  selectedRackId: string | null;
+  onSelectRack: (rackId: string) => void;
   cells: CellSnapshot[];
   onSelectCell: (cell: CellSnapshot) => void;
   isLoading: boolean;
   isError: boolean;
 }
 
-export function RackGrid({ rack, cells, onSelectCell, isLoading, isError }: RackGridProps) {
-  if (!rack) {
+export function RackGrid({ racks, rack, selectedRackId, onSelectRack, cells, onSelectCell, isLoading, isError }: RackGridProps) {
+  if (!racks.length) {
     return (
       <Card>
         <CardHeader>
@@ -24,67 +29,69 @@ export function RackGrid({ rack, cells, onSelectCell, isLoading, isError }: Rack
     );
   }
 
-  const cellMap = new Map<string, CellSnapshot>();
-  cells.forEach((cell) => cellMap.set(`${cell.row}:${cell.column}`, cell));
-
-  const totalCells = rack.rows * rack.columns;
-  const gridTemplateColumns = `repeat(${rack.columns}, minmax(0, 1fr))`;
-
   return (
     <Card className="flex h-full flex-col">
       <CardHeader className="border-b border-slate-100">
-        <div className="flex flex-col gap-1 md:flex-row md:items-baseline md:justify-between">
-          <CardTitle>Rack {rack.rack_number}</CardTitle>
-          <p className="text-sm text-slate-500">
-            {rack.farm_name ? `${rack.farm_name} · ` : ""}
-            {rack.rows}×{rack.columns} cells
-          </p>
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-col gap-1">
+            <div className="text-xs uppercase tracking-wide text-slate-500">Rack</div>
+            <Select value={selectedRackId ?? undefined} onValueChange={onSelectRack}>
+              <SelectTrigger className="w-full md:w-64">
+                <SelectValue placeholder="Choose a rack" />
+              </SelectTrigger>
+              <SelectContent>
+                {racks.map((r) => (
+                  <SelectItem key={r.id} value={r.id}>
+                    Rack {r.rack_number}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {rack && (
+            <div className="flex items-center gap-3">
+              <p className="text-sm text-slate-500">
+                {rack.rows}×{rack.columns} cells
+              </p>
+              <Badge variant="outline" className="text-xs">
+                {isLoading ? "Updating..." : "Polling 5s"}
+              </Badge>
+            </div>
+          )}
         </div>
       </CardHeader>
-      <CardContent className="flex flex-1 flex-col gap-6 pt-6">
-        {isLoading ? (
-          <div className="flex flex-1 items-center justify-center text-sm text-slate-500">
-            Loading sensor data…
-          </div>
-        ) : null}
+      <CardContent className="flex flex-1 flex-col gap-4 pt-4">
         {isError ? (
           <div className="rounded-lg border border-red-100 bg-red-50 p-4 text-sm text-red-700">
             Unable to load sensor readings. Check the gateway connection.
           </div>
         ) : null}
-        {!isLoading ? (
-          <div
-            className="grid gap-4"
-            style={{ gridTemplateColumns }}
-          >
-            {Array.from({ length: totalCells }, (_, index) => {
-              const row = Math.floor(index / rack.columns) + 1;
-              const column = (index % rack.columns) + 1;
-              const key = `${row}:${column}`;
-              const cell =
-                cellMap.get(key) ?? {
-                  rackId: rack.id,
-                  row,
-                  column,
-                  sensors: {},
-                  moisturePercent: null,
-                  lightPercent: null
-                };
-              return (
-                <PlantCell
-                  key={key}
-                  cell={cell}
-                  onSelect={onSelectCell}
-                />
-              );
-            })}
+        {!rack ? (
+          <div className="flex flex-1 items-center justify-center text-sm text-slate-500">
+            Select a rack to view plants
           </div>
-        ) : null}
-        {!isLoading && !cells.length ? (
-          <p className="text-sm text-slate-500">
-            Waiting for the first sensor readings to arrive.
-          </p>
-        ) : null}
+        ) : isLoading && !cells.length ? (
+          <div className="flex flex-1 items-center justify-center text-sm text-slate-500">
+            Loading sensor data…
+          </div>
+        ) : cells.length === 0 ? (
+          <div className="flex flex-1 items-center justify-center text-sm text-slate-500">
+            No plants in this rack.
+          </div>
+        ) : (
+          <div
+            className="grid gap-2"
+            style={{ gridTemplateColumns: `repeat(auto-fill, minmax(140px, 1fr))` }}
+          >
+            {cells.map((cell) => (
+              <PlantCell
+                key={`${cell.row}:${cell.column}`}
+                cell={cell}
+                onSelect={onSelectCell}
+              />
+            ))}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

@@ -1,37 +1,20 @@
 import { Router, type NextFunction, type Request, type Response } from "express";
 import { z } from "zod";
 import {
-  createRack,
-  deleteRack,
-  getRack,
-  listRacks,
-  updateRack
-} from "../services/rack-service";
+  getPlantLocationHistory,
+  getRackPlantReadings,
+  getRackSnapshots
+} from "../services/rack-snapshot-service";
 
 const router = Router();
 
-const rackSchema = z.object({
-  farm_id: z.string().trim().min(1),
-  rack_number: z.number().int().positive().optional(),
-  rack_name: z.string().trim().min(1).optional(),
-  rows: z.number().int().positive().optional(),
-  columns: z.number().int().positive().optional(),
-  max_rows: z.number().int().positive().optional(),
-  max_columns: z.number().int().positive().optional()
-});
-
-const rackPatchSchema = rackSchema.partial().extend({ farm_id: z.never().optional() }).refine(
-  (data) => Object.keys(data).length > 0,
-  {
-    message: "At least one field must be provided for update"
-  }
-);
+const rackIdentifierSchema = z.object({ rackId: z.string().trim().min(1) });
 
 router.get(
   "/racks",
   async (_request: Request, response: Response, next: NextFunction) => {
     try {
-      const racks = await listRacks();
+      const racks = await getRackSnapshots();
       response.json(racks);
     } catch (error) {
       next(error);
@@ -40,12 +23,11 @@ router.get(
 );
 
 router.get(
-  "/racks/:identifier",
+  "/racks/:rackId",
   async (request: Request, response: Response, next: NextFunction) => {
     try {
-      const paramsSchema = z.object({ identifier: z.string().trim().min(1) });
-      const { identifier } = paramsSchema.parse(request.params);
-      const rack = await getRack(identifier);
+      const { rackId } = rackIdentifierSchema.parse(request.params);
+      const [rack] = await getRackSnapshots(rackId);
 
       if (!rack) {
         response.status(404).json({ message: "Rack not found" });
@@ -59,43 +41,53 @@ router.get(
   }
 );
 
-router.post(
-  "/racks",
+router.get(
+  "/racks/:rackId/plants",
   async (request: Request, response: Response, next: NextFunction) => {
     try {
-      const payload = rackSchema.parse(request.body);
-      const rack = await createRack(payload);
-      response.status(201).json(rack);
+      const { rackId } = rackIdentifierSchema.parse(request.params);
+      const readings = await getRackPlantReadings(rackId);
+
+      if (readings.length === 0) {
+        const [rack] = await getRackSnapshots(rackId);
+        if (!rack) {
+          response.status(404).json({ message: "Rack not found" });
+          return;
+        }
+      }
+
+      response.json(readings);
     } catch (error) {
       next(error);
     }
   }
 );
 
-router.patch(
-  "/racks/:identifier",
-  async (request: Request, response: Response, next: NextFunction) => {
-    try {
-      const paramsSchema = z.object({ identifier: z.string().trim().min(1) });
-      const { identifier } = paramsSchema.parse(request.params);
-      const payload = rackPatchSchema.parse(request.body);
-      const rack = await updateRack(identifier, payload);
-      response.json(rack);
-    } catch (error) {
-      next(error);
-    }
-  }
-);
+const historyParamsSchema = z.object({
+  rackId: z.string().trim().min(1),
+  row: z.coerce.number().int().positive(),
+  column: z.coerce.number().int().positive()
+});
 
-router.delete(
-  "/racks/:identifier",
+const historyQuerySchema = z.object({
+  hours: z.coerce.number().int().positive().max(720).default(24)
+});
+
+router.get(
+  "/racks/:rackId/locations/:row/:column/history",
   async (request: Request, response: Response, next: NextFunction) => {
     try {
-      const paramsSchema = z.object({ identifier: z.string().trim().min(1) });
-      const { identifier } = paramsSchema.parse(request.params);
-      await deleteRack(identifier);
-      response.status(204).end();
+      const params = historyParamsSchema.parse(request.params);
+      const { hours } = historyQuerySchema.parse(request.query);
+
+      const history = await getPlantLocationHistory(params.rackId, params.row, params.column, hours);
+      response.json(history);
     } catch (error) {
+      if (error instanceof Error && error.message.toLowerCase().includes("rack not found")) {
+        response.status(404).json({ message: "Rack not found" });
+        return;
+      }
+
       next(error);
     }
   }

@@ -4,7 +4,6 @@ import type { Queryable } from "./location-service";
 
 export type SpeciesRecord = {
   id: string;
-  species_identifier: string | null;
   species_name: string;
   scientific_name: string | null;
   optimal_moisture_min: number | null;
@@ -21,7 +20,6 @@ export type SpeciesRecord = {
 };
 
 export type CreateSpeciesInput = {
-  species_identifier?: string | null;
   species_name: string;
   scientific_name?: string | null;
   optimal_moisture_min?: number | null;
@@ -41,7 +39,6 @@ type SpeciesRow = SpeciesRecord & QueryResultRow;
 function mapSpecies(row: SpeciesRow): SpeciesRecord {
   return {
     ...row,
-    species_identifier: row.species_identifier,
     scientific_name: row.scientific_name,
     optimal_moisture_min: row.optimal_moisture_min,
     optimal_moisture_max: row.optimal_moisture_max,
@@ -58,7 +55,6 @@ export async function listSpecies(): Promise<SpeciesRecord[]> {
   const result = await pool.query<SpeciesRow>(
     `SELECT
        sp.id,
-       sp.species_identifier,
        sp.species_name,
        sp.scientific_name,
        sp.optimal_moisture_min,
@@ -87,12 +83,11 @@ export async function listSpecies(): Promise<SpeciesRecord[]> {
 
 export async function resolveSpecies(
   client: Queryable,
-  speciesIdentifierOrId: string
+  speciesIdOrName: string
 ): Promise<SpeciesRecord> {
   const result = await client.query<SpeciesRow>(
-    `SELECT
-       sp.id,
-       sp.species_identifier,
+   `SELECT
+     sp.id,
        sp.species_name,
        sp.scientific_name,
        sp.optimal_moisture_min,
@@ -113,13 +108,13 @@ export async function resolveSpecies(
        WHERE p.species_id = sp.id
          AND p.status NOT IN ('harvested', 'failed', 'removed')
      ) AS active(count) ON TRUE
-     WHERE sp.id::text = $1 OR sp.species_identifier = $1
+     WHERE sp.id::text = $1 OR LOWER(sp.species_name) = LOWER($1)
      LIMIT 1`,
-    [speciesIdentifierOrId]
+    [speciesIdOrName]
   );
 
   if (result.rowCount === 0) {
-    throw new Error(`Species not found for identifier ${speciesIdentifierOrId}`);
+    throw new Error(`Species not found for id or name ${speciesIdOrName}`);
   }
 
   return mapSpecies(result.rows[0]);
@@ -136,7 +131,6 @@ export async function getSpecies(identifier: string): Promise<SpeciesRecord | nu
 export async function createSpecies(input: CreateSpeciesInput): Promise<SpeciesRecord> {
   const insertResult = await pool.query<{ id: string } & QueryResultRow>(
     `INSERT INTO species (
-       species_identifier,
        species_name,
        scientific_name,
        optimal_moisture_min,
@@ -148,10 +142,9 @@ export async function createSpecies(input: CreateSpeciesInput): Promise<SpeciesR
        optimal_color_index,
        growth_duration_days
      )
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
      RETURNING id`,
     [
-      input.species_identifier ?? null,
       input.species_name,
       input.scientific_name ?? null,
       input.optimal_moisture_min ?? null,
@@ -177,23 +170,21 @@ export async function updateSpecies(
   const updateResult = await pool.query<{ id: string } & QueryResultRow>(
     `UPDATE species
      SET
-       species_identifier = COALESCE($2, species_identifier),
-       species_name = COALESCE($3, species_name),
-       scientific_name = COALESCE($4, scientific_name),
-       optimal_moisture_min = COALESCE($5, optimal_moisture_min),
-       optimal_moisture_max = COALESCE($6, optimal_moisture_max),
-       optimal_temperature_min = COALESCE($7, optimal_temperature_min),
-       optimal_temperature_max = COALESCE($8, optimal_temperature_max),
-       optimal_light_intensity_min = COALESCE($9, optimal_light_intensity_min),
-       optimal_light_intensity_max = COALESCE($10, optimal_light_intensity_max),
-       optimal_color_index = COALESCE($11, optimal_color_index),
-       growth_duration_days = COALESCE($12, growth_duration_days),
+       species_name = COALESCE($2, species_name),
+       scientific_name = COALESCE($3, scientific_name),
+       optimal_moisture_min = COALESCE($4, optimal_moisture_min),
+       optimal_moisture_max = COALESCE($5, optimal_moisture_max),
+       optimal_temperature_min = COALESCE($6, optimal_temperature_min),
+       optimal_temperature_max = COALESCE($7, optimal_temperature_max),
+       optimal_light_intensity_min = COALESCE($8, optimal_light_intensity_min),
+       optimal_light_intensity_max = COALESCE($9, optimal_light_intensity_max),
+       optimal_color_index = COALESCE($10, optimal_color_index),
+       growth_duration_days = COALESCE($11, growth_duration_days),
        updated_at = NOW()
      WHERE id = $1
      RETURNING id`,
     [
       existing.id,
-      input.species_identifier ?? null,
       input.species_name ?? null,
       input.scientific_name ?? null,
       input.optimal_moisture_min ?? null,

@@ -17,7 +17,7 @@ export interface Plant {
 }
 
 export interface CellSnapshot {
-  rackId: string;
+  rack_number: number;
   row: number;
   column: number;
   display_name: string | null;
@@ -31,4 +31,5 @@ export interface HistoricalDataPoint {
   timestamp: string;
   moisture: number;
   light: number;
+  color: string | null;
 }

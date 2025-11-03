@@ -5,7 +5,7 @@ import type { Plant, RackSummary, HistoricalDataPoint } from "./types";
  */
 export const MOCK_RACKS: RackSummary[] = [
   { id: "rack-1", rack_number: 1, rows: 4, columns: 6 },
-  { id: "rack-2", rack_number: 2, rows: 4, columns: 6 },
+  { id: "rack-2", rack_number: 2, rows: 4, columns: 5 },
   { id: "rack-3", rack_number: 3, rows: 3, columns: 5 }
 ];
 
@@ -43,11 +43,11 @@ const MOCK_PLANTS_BASE: Plant[] = [
   { display_name: "Fennel", column: 6, row: 4, planted_at: "2025-10-15", light_level: 70, moisture_level: 50, color: "#2d6a4f", rack_number: 1 },
   // Rack 2 - Row 1 (Vegetables)
   { display_name: "Tomato", column: 1, row: 1, planted_at: "2025-09-15", light_level: 92, moisture_level: 65, color: "#dc2626", rack_number: 2 },
-  { display_name: "Pepper", column: 2, row: 1, planted_at: "2025-09-18", light_level: 90, moisture_level: 60, color: "#f97316", rack_number: 2 },
-  { display_name: "Eggplant", column: 3, row: 1, planted_at: "2025-09-20", light_level: 88, moisture_level: 62, color: "#7c3aed", rack_number: 2 },
+  { display_name: "Pepper", column: 2, row: 2, planted_at: "2025-09-18", light_level: 90, moisture_level: 60, color: "#f97316", rack_number: 2 },
+  { display_name: "Eggplant", column: 3, row: 3, planted_at: "2025-09-20", light_level: 88, moisture_level: 62, color: "#7c3aed", rack_number: 2 },
   { display_name: "Cucumber", column: 4, row: 1, planted_at: "2025-09-12", light_level: 85, moisture_level: 72, color: "#0891b2", rack_number: 2 },
   { display_name: "Zucchini", column: 5, row: 1, planted_at: "2025-09-10", light_level: 87, moisture_level: 68, color: "#16a34a", rack_number: 2 },
-  { display_name: "Squash", column: 6, row: 1, planted_at: "2025-09-14", light_level: 86, moisture_level: 70, color: "#eab308", rack_number: 2 }
+  { display_name: "Squash", column: 3, row: 2, planted_at: "2025-09-14", light_level: 86, moisture_level: 70, color: "#eab308", rack_number: 2 }
 ];
 
 /**
@@ -82,39 +82,41 @@ export function generateMockPlants(): Plant[] {
 
 /**
  * Generate mock historical data for a plant based on current time
- * Returns 24 data points representing the last 24 hours (1 point per hour)
+ * Returns data points representing the last 5 minutes (1 point every 30 seconds)
  */
 export function generateHistoricalData(row: number, column: number, rackNumber: number): HistoricalDataPoint[] {
   const now = Date.now();
-  const baseTimestamp = Math.floor(now / 3600000) * 3600000; // Round to nearest hour
+  const baseTimestamp = Math.floor(now / 30000) * 30000; // Round to nearest 30 seconds
   const plantSeed = row * 10 + column + (rackNumber * 100);
 
   const dataPoints: HistoricalDataPoint[] = [];
 
-  // Generate 24 historical points (one per hour)
-  for (let i = 23; i >= 0; i--) {
-    const timestamp = new Date(baseTimestamp - i * 3600000);
-    const timeKey = timestamp.getTime() / 3600000; // Hour-based key
+  // Generate 10 historical points (one every 30 seconds for 5 minutes)
+  for (let i = 9; i >= 0; i--) {
+    const timestamp = new Date(baseTimestamp - i * 30000); // 30 seconds intervals
+    const timeKey = timestamp.getTime() / 30000; // 30-second-based key
 
     // Create deterministic variations based on plant position and time
     const hashValue = (plantSeed * 73856093 ^ Math.floor(timeKey) * 19349663) >>> 0;
 
-    // Create cyclic patterns that repeat roughly daily
-    const hourOfDay = timestamp.getHours();
-    const cycleFactor = Math.sin((hourOfDay / 24) * Math.PI * 2) * 15; // ±15% daily cycle
+    // Create subtle variations over 5 minutes (much smaller than daily cycles)
+    const minuteProgress = ((now - timestamp.getTime()) / 1000) / 300; // 0-1 over 5 minutes
+    const cycleFactor = Math.sin(minuteProgress * Math.PI * 4) * 2; // ±2% variation over 5 minutes
 
     // Base values from MOCK_PLANTS_BASE
     const basePlant = MOCK_PLANTS_BASE.find((p) => p.row === row && p.column === column && p.rack_number === rackNumber);
     const baseMoisture = basePlant?.moisture_level ?? 50;
     const baseLight = basePlant?.light_level ?? 70;
+    const plantColor = basePlant?.color ?? null;
 
-    const moistureVariation = ((hashValue % 21) - 10) * 0.8 + cycleFactor * 0.5;
-    const lightVariation = (((hashValue >> 8) % 21) - 10) * 0.8 + cycleFactor;
+    const moistureVariation = ((hashValue % 11) - 5) * 0.3 + cycleFactor * 0.5; // Smaller variations
+    const lightVariation = (((hashValue >> 8) % 11) - 5) * 0.3 + cycleFactor;
 
     dataPoints.push({
       timestamp: timestamp.toISOString(),
       moisture: Math.max(20, Math.min(90, baseMoisture + moistureVariation)),
-      light: Math.max(30, Math.min(95, baseLight + lightVariation))
+      light: Math.max(30, Math.min(95, baseLight + lightVariation)),
+      color: plantColor
     });
   }
 

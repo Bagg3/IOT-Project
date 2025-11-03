@@ -4,7 +4,7 @@ IoT-powered vertical farming demo consisting of a Bun/TypeScript backend, MQTT g
 
 ## Prerequisites
 
-- Docker (for PostgreSQL and HiveMQ)
+- Docker (for PostgreSQL and Mosquitto)
 - Bun >= 1.1.0
 - Node.js 18+ (for tooling around Vite/Tailwind if needed)
 
@@ -41,12 +41,12 @@ IoT-powered vertical farming demo consisting of a Bun/TypeScript backend, MQTT g
 - `gateway/` – MQTT bridge between sensors/actuators and backend
 - `simulator/` – Virtual sensor/actuator publisher using MQTT
 - `frontend/` – React dashboard (Vite + React Query + Tailwind)
-- `docker-compose.yml` – PostgreSQL + HiveMQ broker
+- `docker-compose.yml` – PostgreSQL + Mosquitto broker
 - `backend/migrations/schema.sql` – Database schema and seed data
 
 ## Useful Commands
 
-- `docker compose ps` – Verify Postgres & HiveMQ containers
+- `docker compose ps` – Verify Postgres & Mosquitto containers
 - `bunx psql -h localhost -U greengrow -d greengrow -c "SELECT COUNT(*) FROM sensor_readings;"` – Check ingested readings
 - `bun test` (future) – Placeholder for automated tests
 

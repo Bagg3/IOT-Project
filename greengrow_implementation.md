@@ -2,7 +2,7 @@
 
 IoT-based vertical farming system with simulated sensors/actuators, MQTT broker, backend API, and React dashboard.
 
-**Stack**: Bun + TypeScript + PostgreSQL + HiveMQ + React + shadcn/ui
+**Stack**: Bun + TypeScript + PostgreSQL + Mosquitto + React + shadcn/ui
 
 ---
 
@@ -34,14 +34,19 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  hivemq:
-    image: hivemq/hivemq4
+  mosquitto:
+    image: eclipse-mosquitto:2
     ports:
       - "1883:1883"
-      - "8080:8080"
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_log:/mosquitto/log
 
 volumes:
   postgres_data:
+  mosquitto_data:
+  mosquitto_log:
 ```
 
 **Todo:**
@@ -737,7 +742,7 @@ export default function App() {
 
 ## Verification Checklist
 
-- [ ] Docker services running (PostgreSQL + HiveMQ)
+- [ ] Docker services running (PostgreSQL + Mosquitto)
 - [ ] Database has schema and seed data
 - [ ] Backend API responds to requests
 - [ ] Gateway forwards MQTT messages to backend

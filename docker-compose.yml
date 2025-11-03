@@ -18,18 +18,35 @@ services:
       timeout: 5s
       retries: 5
 
-  hivemq:
-    image: hivemq/hivemq4
-    container_name: greengrow_hivemq
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: greengrow_mosquitto
     restart: unless-stopped
     ports:
       - "1883:1883"
-      - "8080:8080"
+    volumes:
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_log:/mosquitto/log
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
     healthcheck:
-      test: ["CMD-SHELL", "wget --spider -q http://localhost:8080 || exit 1"]
-      interval: 15s
-      timeout: 5s
-      retries: 5
+      test:
+        [
+          "CMD",
+          "mosquitto_sub",
+          "-h",
+          "localhost",
+          "-t",
+          "$SYS/broker/version",
+          "-C",
+          "1",
+          "-W",
+          "5",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
 volumes:
   postgres_data:
+  mosquitto_data:
+  mosquitto_log:

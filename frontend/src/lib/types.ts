@@ -1,7 +1,3 @@
-/**
- * Core data types for the application
- */
-
 export interface RackSummary {
   id: string;
   rack_number: number;

@@ -7,15 +7,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 interface RackGridProps {
   racks: RackSummary[];
   rack?: RackSummary;
-  selectedRackId: string | null;
-  onSelectRack: (rackId: string) => void;
+  selectedRackNumber: number | null;
+  onSelectRack: (rackNumber: number) => void;
   cells: CellSnapshot[];
   onSelectCell: (cell: CellSnapshot) => void;
   isLoading: boolean;
   isError: boolean;
 }
 
-export function RackGrid({ racks, rack, selectedRackId, onSelectRack, cells, onSelectCell, isLoading, isError }: RackGridProps) {
+export function RackGrid({ racks, rack, selectedRackNumber, onSelectRack, cells, onSelectCell, isLoading, isError }: RackGridProps) {
   if (!racks.length) {
     return (
       <Card>
@@ -35,13 +35,13 @@ export function RackGrid({ racks, rack, selectedRackId, onSelectRack, cells, onS
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-col gap-1">
             <div className="text-xs uppercase tracking-wide text-slate-500">Rack</div>
-            <Select value={selectedRackId ?? undefined} onValueChange={onSelectRack}>
+            <Select value={selectedRackNumber?.toString() ?? undefined} onValueChange={(value) => onSelectRack(parseInt(value, 10))}>
               <SelectTrigger className="w-full md:w-64">
                 <SelectValue placeholder="Choose a rack" />
               </SelectTrigger>
               <SelectContent>
                 {racks.map((r) => (
-                  <SelectItem key={r.id} value={r.id}>
+                  <SelectItem key={r.rack_number} value={r.rack_number.toString()}>
                     Rack {r.rack_number}
                   </SelectItem>
                 ))}
@@ -79,17 +79,30 @@ export function RackGrid({ racks, rack, selectedRackId, onSelectRack, cells, onS
             No plants in this rack.
           </div>
         ) : (
-          <div
-            className="grid gap-2"
-            style={{ gridTemplateColumns: `repeat(auto-fill, minmax(140px, 1fr))` }}
-          >
-            {cells.map((cell) => (
-              <PlantCell
-                key={`${cell.row}:${cell.column}`}
-                cell={cell}
-                onSelect={onSelectCell}
-              />
-            ))}
+          <div className="flex flex-1 flex-col">
+            <div
+              className="grid gap-2 flex-1"
+              style={{ gridTemplateColumns: `repeat(${rack.columns}, 1fr)`, gridTemplateRows: `repeat(${rack.rows}, 1fr)` }}
+            >
+              {Array.from({ length: rack.rows }).map((_, rowIndex) =>
+                Array.from({ length: rack.columns }).map((_, colIndex) => {
+                  const row = rowIndex + 1;
+                  const column = colIndex + 1;
+                  const cell = cells.find((c) => c.row === row && c.column === column);
+                  return (
+                    <div key={`${row}:${column}`} className="min-h-0">
+                      {cell ? (
+                        <PlantCell cell={cell} onSelect={onSelectCell} />
+                      ) : (
+                        <div className="flex h-full items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50 p-3 text-xs text-slate-400">
+                          R{row}C{column}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
           </div>
         )}
       </CardContent>

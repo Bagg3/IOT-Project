@@ -6,39 +6,52 @@ import {
 import { useRacks, useSensorData } from "./hooks";
 import { RackGrid } from "./components/RackGrid";
 import { Modal } from "./components/ui/modal";
-import ActuatorControls from "./components/ActuatorControls";
+import PlantDetails from "./components/PlantDetails";
 import { Badge } from "./components/ui/badge";
 import { Leaf } from "lucide-react";
 
 export default function App() {
-  const [selectedRackId, setSelectedRackId] = useState<string | null>(null);
+  const [selectedRackNumber, setSelectedRackNumber] = useState<number | null>(null);
   const [activeCell, setActiveCell] = useState<CellSnapshot | null>(null);
 
   // Use custom hooks for data fetching
   const racksQuery = useRacks();
-  const cellsQuery = useSensorData(selectedRackId);
+  const cellsQuery = useSensorData(selectedRackNumber);
 
   useEffect(() => {
     const firstRack = racksQuery.data?.[0];
     if (!firstRack) {
       return;
     }
-    setSelectedRackId((previous) => previous ?? firstRack.id);
+    setSelectedRackNumber((previous) => previous ?? firstRack.rack_number);
   }, [racksQuery.data]);
 
   const selectedRack = useMemo(
-    () => racksQuery.data?.find((rack) => rack.id === selectedRackId),
-    [racksQuery.data, selectedRackId]
+    () => racksQuery.data?.find((rack) => rack.rack_number === selectedRackNumber),
+    [racksQuery.data, selectedRackNumber]
   );
 
   const cells = cellsQuery.data ?? [];
 
   useEffect(() => {
-    if (!activeCell || !selectedRackId || activeCell.rackId === selectedRackId) {
+    if (!activeCell || !selectedRackNumber || activeCell.rack_number === selectedRackNumber) {
       return;
     }
     setActiveCell(null);
-  }, [selectedRackId, activeCell]);
+  }, [selectedRackNumber, activeCell]);
+
+  // Sync activeCell with updated sensor data
+  useEffect(() => {
+    if (!activeCell) {
+      return;
+    }
+    const updatedCell = cells.find(
+      (cell) => cell.row === activeCell.row && cell.column === activeCell.column
+    );
+    if (updatedCell) {
+      setActiveCell(updatedCell);
+    }
+  }, [cells]);
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -67,8 +80,8 @@ export default function App() {
           <RackGrid
             racks={racksQuery.data ?? []}
             rack={selectedRack}
-            selectedRackId={selectedRackId}
-            onSelectRack={setSelectedRackId}
+            selectedRackNumber={selectedRackNumber}
+            onSelectRack={setSelectedRackNumber}
             cells={cells}
             onSelectCell={setActiveCell}
             isLoading={cellsQuery.isLoading}
@@ -83,11 +96,11 @@ export default function App() {
         title={activeCell?.display_name || undefined}
         description={
           activeCell
-            ? `Rack ${selectedRack?.rack_number} · Row ${activeCell.row} · Col ${activeCell.column}${activeCell.planted_at ? ` · ${new Date(activeCell.planted_at).toLocaleDateString()}` : ""}`
+            ? `Rack ${selectedRack?.rack_number} · Row ${activeCell.row} · Col ${activeCell.column} ${activeCell.planted_at ? ` · Planted ${new Date(activeCell.planted_at).toLocaleDateString()}` : ""}`
             : undefined
         }
       >
-        {activeCell ? <ActuatorControls cell={activeCell} rackId={selectedRackId} /> : null}
+        {activeCell ? <PlantDetails cell={activeCell} rackNumber={selectedRackNumber} /> : null}
       </Modal>
     </div>
   );

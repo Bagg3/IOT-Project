@@ -16,20 +16,20 @@ export function useRacks(): UseQueryResult<RackSummary[]> {
 }
 
 /**
- * Hook to get a specific rack by ID
+ * Hook to get a specific rack by number
  */
-export function useRack(rackId: string | null): UseQueryResult<RackSummary | undefined> {
+export function useRack(rackNumber: number | null): UseQueryResult<RackSummary | undefined> {
   const racksQuery = useRacks();
 
   return useQuery({
-    queryKey: ["rack", rackId],
+    queryKey: ["rack", rackNumber],
     queryFn: () => {
-      if (!rackId) {
+      if (rackNumber === null) {
         return undefined;
       }
-      return racksQuery.data?.find((rack) => rack.id === rackId);
+      return racksQuery.data?.find((rack) => rack.rack_number === rackNumber);
     },
-    enabled: Boolean(rackId && racksQuery.data),
+    enabled: rackNumber !== null && Boolean(racksQuery.data),
     staleTime: Number.POSITIVE_INFINITY, // Derived data, never stale
     placeholderData: (previousData) => previousData
   });

@@ -28,19 +28,12 @@ export function parsePercentage(input: unknown): number | null {
 }
 
 /**
- * Extract rack number from rack ID (e.g., "rack-1" → 1)
- */
-export function getRackNumber(rackId: string): number {
-  return parseInt(rackId.replace("rack-", ""), 10);
-}
-
-/**
  * Transform plant data to cell snapshots for UI display
  */
 export function mapReadingsToCells(plants: Plant[]): CellSnapshot[] {
   return plants
     .map((plant) => ({
-      rackId: `rack-${plant.rack_number}`,
+      rack_number: plant.rack_number,
       row: plant.row,
       column: plant.column,
       display_name: plant.display_name,

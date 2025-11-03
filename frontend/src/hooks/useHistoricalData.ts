@@ -7,20 +7,20 @@ import { fetchPlantHistory, type HistoricalDataPoint } from "../lib/api";
  * Default polling interval: 10 seconds (10000ms) to show trending updates
  */
 export function useHistoricalData(
-  rackId: string | null,
+  rackNumber: number | null,
   row: number | null,
   column: number | null,
   pollInterval: number = 10000
 ): UseQueryResult<HistoricalDataPoint[]> {
   return useQuery({
-    queryKey: ["historical-data", rackId, row, column],
+    queryKey: ["historical-data", rackNumber, row, column],
     queryFn: async () => {
-      if (!rackId || row === null || column === null) {
+      if (rackNumber === null || row === null || column === null) {
         return [];
       }
-      return await fetchPlantHistory(rackId, row, column);
+      return await fetchPlantHistory(rackNumber, row, column);
     },
-    enabled: Boolean(rackId && row !== null && column !== null),
+    enabled: rackNumber !== null && row !== null && column !== null,
     refetchInterval: pollInterval,
     staleTime: pollInterval / 2,
     placeholderData: (previousData) => previousData

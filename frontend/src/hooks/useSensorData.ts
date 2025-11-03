@@ -12,19 +12,19 @@ import {
  * Default polling interval: 5 seconds (5000ms)
  */
 export function useSensorData(
-  rackId: string | null,
+  rackNumber: number | null,
   pollInterval: number = 5000
 ): UseQueryResult<CellSnapshot[]> {
   return useQuery({
-    queryKey: ["sensor-data", rackId],
+    queryKey: ["sensor-data", rackNumber],
     queryFn: async () => {
-      if (!rackId) {
+      if (rackNumber === null) {
         return [];
       }
-      const readings = await fetchLatestSensorReadings(rackId);
+      const readings = await fetchLatestSensorReadings(rackNumber);
       return mapReadingsToCells(readings);
     },
-    enabled: Boolean(rackId),
+    enabled: rackNumber !== null,
     refetchInterval: pollInterval,
     staleTime: pollInterval / 2,
     placeholderData: (previousData) => previousData
@@ -37,18 +37,18 @@ export function useSensorData(
  * Default polling interval: 5 seconds
  */
 export function useRawSensorReadings(
-  rackId: string | null,
+  rackNumber: number | null,
   pollInterval: number = 5000
 ): UseQueryResult<Plant[]> {
   return useQuery({
-    queryKey: ["raw-sensor-readings", rackId],
+    queryKey: ["raw-sensor-readings", rackNumber],
     queryFn: async () => {
-      if (!rackId) {
+      if (rackNumber === null) {
         return [];
       }
-      return await fetchLatestSensorReadings(rackId);
+      return await fetchLatestSensorReadings(rackNumber);
     },
-    enabled: Boolean(rackId),
+    enabled: rackNumber !== null,
     refetchInterval: pollInterval,
     staleTime: pollInterval / 2,
     placeholderData: (previousData) => previousData
@@ -72,13 +72,13 @@ export interface CellMetrics {
  */
 export function useCellMetrics(
   cell: CellSnapshot | null,
-  rackId: string | null,
+  rackNumber: number | null,
   pollInterval: number = 5000
 ): UseQueryResult<CellMetrics | null> {
   return useQuery({
-    queryKey: ["cell-metrics", rackId, cell?.row, cell?.column],
+    queryKey: ["cell-metrics", rackNumber, cell?.row, cell?.column],
     queryFn: async () => {
-      if (!cell || !rackId) {
+      if (!cell || rackNumber === null) {
         return null;
       }
       return {
@@ -86,7 +86,7 @@ export function useCellMetrics(
         lastUpdated: new Date().toISOString()
       };
     },
-    enabled: Boolean(cell && rackId),
+    enabled: cell !== null && rackNumber !== null,
     refetchInterval: pollInterval,
     staleTime: pollInterval / 2,
     placeholderData: (previousData) => previousData

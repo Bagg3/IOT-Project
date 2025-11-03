@@ -1,0 +1,35 @@
+version: "3.8"
+services:
+  postgres:
+    image: postgres:15
+    container_name: greengrow_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: greengrow
+      POSTGRES_USER: greengrow
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U greengrow"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  hivemq:
+    image: hivemq/hivemq4
+    container_name: greengrow_hivemq
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:8080 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:

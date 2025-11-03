@@ -1,0 +1,17 @@
+{
+  "name": "greengrow-gateway",
+  "version": "0.1.0",
+  "description": "MQTT gateway for GreenGrow",
+  "type": "module",
+  "scripts": {
+    "dev": "bun run --watch src/gateway.ts",
+    "start": "bun run src/gateway.ts"
+  },
+  "dependencies": {
+    "mqtt": "^5.3.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.19"
+  }
+}

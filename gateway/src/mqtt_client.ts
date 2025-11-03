@@ -6,13 +6,21 @@ import { getColorHexCode, getLightLux, getMoisturePercentage } from "./edge_logi
 const mqttClient = mqtt.connect(config.MQTT_URL);
 
 mqttClient.on("connect", () => {
-    const actuatorTopicPattern = `greengrow/${config.FARM_ID}/${config.RACK_ID}/+/+/+/+`;
     console.log(`🔌 Gateway connected to MQTT broker at ${config.MQTT_URL}`);
-    mqttClient.subscribe(actuatorTopicPattern, (error: Error | null) => {
+    const waterPumpTopicPattern = `greengrow/${config.FARM_ID}/${config.RACK_ID}/+/+/water_pump/+`;
+    mqttClient.subscribe(waterPumpTopicPattern, (error: Error | null) => {
         if (error) {
             console.error("Failed to subscribe to topic", error);
         } else {
-            console.log(`Subscribed to ${actuatorTopicPattern}`);
+            console.log(`Subscribed to ${waterPumpTopicPattern}`);
+        }
+    });
+    const lampTopicPattern = `greengrow/${config.FARM_ID}/${config.RACK_ID}/+/+/lamp/+`;
+    mqttClient.subscribe(lampTopicPattern, (error: Error | null) => {
+        if (error) {
+            console.error("Failed to subscribe to topic", error);
+        } else {
+            console.log(`Subscribed to ${lampTopicPattern}`);
         }
     });
 });

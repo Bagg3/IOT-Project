@@ -1,13 +1,23 @@
 import axios from "axios";
 import { parsePercentage } from "./utils";
+import { MOCK_RACKS, generateMockPlants } from "./mockData";
 
 export interface RackSummary {
   id: string;
   rack_number: number;
   rows: number;
   columns: number;
-  farm_id: string;
-  farm_name?: string;
+}
+
+export interface Plant {
+  display_name: string;
+  column: number;
+  row: number;
+  planted_at: string;
+  light_level: number | null;
+  moisture_level: number | null;
+  color: string;
+  rack_number: number;
 }
 
 export interface SensorReading {
@@ -37,7 +47,9 @@ export interface CellSnapshot {
   rackId: string;
   row: number;
   column: number;
-  sensors: Record<string, SensorReading>;
+  display_name: string | null;
+  planted_at: string | null;
+  color: string | null;
   moisturePercent: number | null;
   lightPercent: number | null;
 }
@@ -52,13 +64,16 @@ export const apiClient = axios.create({
 });
 
 export async function fetchRacks() {
-  const { data } = await apiClient.get<RackSummary[]>("/dashboard/racks");
-  return data;
+  // Use mock data in development
+  return MOCK_RACKS;
 }
 
-export async function fetchLatestSensorReadings(rackId: string) {
-  const { data } = await apiClient.get<SensorReading[]>(`/sensor-readings/latest/${rackId}`);
-  return data;
+export async function fetchLatestSensorReadings(rackId: string): Promise<Plant[]> {
+  // Use mock data in development - filter plants by rack number extracted from rackId
+  // rackId format: "rack-1", "rack-2", etc.
+  const rackNumber = parseInt(rackId.replace("rack-", ""), 10);
+  const mockPlants = generateMockPlants();
+  return mockPlants.filter((plant) => plant.rack_number === rackNumber);
 }
 
 interface SensorHistoryPayload {
@@ -94,43 +109,22 @@ function extractReadingValue(reading: SensorReading) {
   return candidate;
 }
 
-export function mapReadingsToCells(readings: SensorReading[]): CellSnapshot[] {
-  const cells = new Map<string, CellSnapshot>();
-
-  readings.forEach((reading) => {
-    const key = `${reading.row}:${reading.column}`;
-    if (!cells.has(key)) {
-      cells.set(key, {
-        rackId: reading.rack_id,
-        row: reading.row,
-        column: reading.column,
-        sensors: {},
-        moisturePercent: null,
-        lightPercent: null
-      });
-    }
-
-    const cell = cells.get(key);
-    if (!cell) {
-      return;
-    }
-
-    cell.sensors[reading.sensor_type] = reading;
-
-    const numericValue = extractReadingValue(reading);
-
-    if (reading.sensor_type.toLowerCase().includes("moisture")) {
-      cell.moisturePercent = parsePercentage(numericValue);
-    }
-    if (reading.sensor_type.toLowerCase().includes("light")) {
-      cell.lightPercent = parsePercentage(numericValue);
-    }
-  });
-
-  return Array.from(cells.values()).sort((a, b) => {
-    if (a.row === b.row) {
-      return a.column - b.column;
-    }
-    return a.row - b.row;
-  });
+export function mapReadingsToCells(plants: Plant[]): CellSnapshot[] {
+  return plants
+    .map((plant) => ({
+      rackId: `rack-${plant.rack_number}`,
+      row: plant.row,
+      column: plant.column,
+      display_name: plant.display_name,
+      planted_at: plant.planted_at,
+      color: plant.color,
+      moisturePercent: plant.moisture_level,
+      lightPercent: plant.light_level
+    }))
+    .sort((a, b) => {
+      if (a.row === b.row) {
+        return a.column - b.column;
+      }
+      return a.row - b.row;
+    });
 }

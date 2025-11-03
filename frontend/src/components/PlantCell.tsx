@@ -42,12 +42,24 @@ export function PlantCell({ cell, onSelect }: PlantCellProps) {
         status.tone
       )}
     >
-      <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-slate-500">
-        <span>
-          Row {cell.row} · Col {cell.column}
-        </span>
-        <Badge variant={status.variant}>{status.label}</Badge>
+      <div className="space-y-2">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex-1">
+            <div className="text-sm font-semibold text-slate-900">{cell.display_name || "Unknown"}</div>
+            <div className="text-xs text-slate-500">
+              Row {cell.row} · Col {cell.column}
+            </div>
+          </div>
+          {cell.color && (
+            <div className="h-6 w-6 rounded-lg border border-slate-200 shadow-sm" style={{ backgroundColor: cell.color }} />
+          )}
+        </div>
+        {cell.planted_at && <div className="text-xs text-slate-500">Planted: {new Date(cell.planted_at).toLocaleDateString()}</div>}
+        <Badge variant={status.variant} className="w-fit">
+          {status.label}
+        </Badge>
       </div>
+
       <div className="mt-4 space-y-2 text-sm text-slate-700">
         <div className="flex items-center justify-between">
           <span className="font-medium text-slate-600">Moisture</span>

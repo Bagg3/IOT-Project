@@ -46,6 +46,19 @@ services:
       timeout: 10s
       retries: 3
 
+  gateway:
+    build:
+      context: .
+    container_name: gateway
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      SENSOR_SCRIPT_PATH: /app/simulator/src/
+      MQTT_URL: mqtt://mosquitto:1883  
+    depends_on:
+      - mosquitto
+      - postgres
+
 volumes:
   postgres_data:
   mosquitto_data:

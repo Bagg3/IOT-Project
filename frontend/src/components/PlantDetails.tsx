@@ -75,7 +75,7 @@ export default function PlantDetails({ cell, rackNumber }: PlantDetailsProps) {
 
       <div className='space-y-1'>
         <div className='flex items-center justify-between'>
-          <h3 className='text-xs font-semibold text-slate-700 uppercase tracking-wide'>24-Hour Trends</h3>
+          <h3 className='text-xs font-semibold text-slate-700 uppercase tracking-wide'>5-Minute Trends</h3>
           {isHistoryLoading && <span className='text-xs text-slate-500'>Updating</span>}
         </div>
         <TrendChart chartData={chartData} isLoading={isHistoryLoading} />

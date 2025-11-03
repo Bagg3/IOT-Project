@@ -114,8 +114,8 @@ function ColorHistory({ chartData }: { chartData: ChartDataPoint[] }) {
         })}
       </div>
       <div className="mt-2 flex items-center justify-between text-xs text-slate-500">
-        <span>24 hours</span>
-        <span>Hourly snapshots</span>
+        <span>5 minutes</span>
+        <span>Recent snapshots</span>
       </div>
     </div>
   );

@@ -3,7 +3,7 @@ import { fetchPlantHistory, type HistoricalDataPoint } from "../lib/api";
 
 /**
  * Hook for fetching historical sensor data for a plant cell
- * Returns 24 hours of historical data with 1-hour intervals
+ * Returns 5 minutes of historical data with frequent intervals
  * Default polling interval: 10 seconds (10000ms) to show trending updates
  */
 export function useHistoricalData(
@@ -18,7 +18,8 @@ export function useHistoricalData(
       if (rackNumber === null || row === null || column === null) {
         return [];
       }
-      return await fetchPlantHistory(rackNumber, row, column);
+      // Request 5 minutes of historical data (5/60 = 0.083 hours)
+      return await fetchPlantHistory(rackNumber, row, column, 5 / 60);
     },
     enabled: rackNumber !== null && row !== null && column !== null,
     refetchInterval: pollInterval,

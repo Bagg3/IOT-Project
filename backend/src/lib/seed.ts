@@ -1,4 +1,13 @@
-import type { PoolClient } from "pg";
+import type { PoolClient, QueryResultRow } from "pg";
+
+const DEMO_SPECIES_ID = "00000000-0000-0000-0000-000000000201";
+
+function toTitleCase(value: string): string {
+  return value
+    .split("_")
+    .map((part) => (part.length > 0 ? part[0].toUpperCase() + part.slice(1) : part))
+    .join(" ");
+}
 
 /**
  * Seeds the database with initial development data
@@ -157,6 +166,106 @@ export async function seedDatabase(client: PoolClient): Promise<void> {
       $$;
     `);
     console.log("  ✓ Plant locations generated");
+
+    const sensorTypes = await client.query<{ id: string; type_name: string } & QueryResultRow>(
+      `SELECT id::text AS id, type_name FROM sensor_types`
+    );
+
+    const actuatorTypes = await client.query<{ id: string; type_name: string } & QueryResultRow>(
+      `SELECT id::text AS id, type_name FROM actuator_types`
+    );
+
+    const plantLocations = await client.query<
+      { id: string; rack_id: string; row: number; column: number; rack_number: number; rack_name: string | null } &
+        QueryResultRow
+    >(`
+      SELECT
+        pl.id::text AS id,
+        pl.rack_id::text AS rack_id,
+        pl.row,
+        pl.column,
+        r.rack_number,
+        r.rack_name
+      FROM plant_locations pl
+      JOIN racks r ON r.id = pl.rack_id
+      ORDER BY r.rack_number, pl.row, pl.column
+    `);
+
+    for (const location of plantLocations.rows) {
+      const plantedOn = new Date();
+      plantedOn.setDate(plantedOn.getDate() - ((location.row + location.column) % 7));
+      const plantedOnDate = plantedOn.toISOString().slice(0, 10);
+      const displayName = `Rack ${location.rack_number} (${location.row},${location.column}) Lettuce`;
+      const note = `Seed data for rack ${location.rack_number} position (${location.row},${location.column}).`;
+
+      const existingPlant = await client.query<{ id: string } & QueryResultRow>(
+        `SELECT id::text AS id
+         FROM plants
+         WHERE plant_location_id = $1
+         ORDER BY created_at DESC
+         LIMIT 1`,
+        [location.id]
+      );
+
+      if (existingPlant.rowCount === 0) {
+        await client.query(
+          `INSERT INTO plants (
+             plant_location_id,
+             species_id,
+             display_name,
+             status,
+             planted_on,
+             notes
+           )
+           VALUES ($1, $2, $3, 'growing', $4, $5)`,
+          [location.id, DEMO_SPECIES_ID, displayName, plantedOnDate, note]
+        );
+      } else {
+        await client.query(
+          `UPDATE plants
+           SET species_id = $2,
+               display_name = $3,
+               status = 'growing',
+               planted_on = $4,
+               harvested_on = NULL,
+               notes = $5,
+               updated_at = NOW()
+           WHERE id = $1`,
+          [existingPlant.rows[0].id, DEMO_SPECIES_ID, displayName, plantedOnDate, note]
+        );
+      }
+
+      await client.query(
+        `UPDATE plant_locations
+         SET is_occupied = TRUE, updated_at = NOW()
+         WHERE id = $1`,
+        [location.id]
+      );
+
+      for (const sensorType of sensorTypes.rows) {
+        const sensorName = `${toTitleCase(sensorType.type_name)} - Rack ${location.rack_number} (${location.row},${location.column})`;
+        await client.query(
+          `INSERT INTO sensors (plant_location_id, sensor_type_id, sensor_name)
+           VALUES ($1, $2, $3)
+           ON CONFLICT (plant_location_id, sensor_type_id)
+           DO UPDATE SET sensor_name = EXCLUDED.sensor_name, updated_at = NOW()`,
+          [location.id, sensorType.id, sensorName]
+        );
+      }
+
+      for (const actuatorType of actuatorTypes.rows) {
+        const actuatorName = `${toTitleCase(actuatorType.type_name)} - Rack ${location.rack_number} (${location.row},${location.column})`;
+        await client.query(
+          `INSERT INTO actuators (plant_location_id, actuator_type_id, actuator_name)
+           VALUES ($1, $2, $3)
+           ON CONFLICT (plant_location_id, actuator_type_id)
+           DO UPDATE SET actuator_name = EXCLUDED.actuator_name, updated_at = NOW()`,
+          [location.id, actuatorType.id, actuatorName]
+        );
+      }
+    }
+
+    console.log("  ✓ Plants, sensors, and actuators seeded for every rack position");
 
     console.log("✅ Database seeding completed successfully!");
   } catch (error) {

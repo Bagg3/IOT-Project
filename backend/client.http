@@ -1,57 +1,58 @@
 @baseUrl = http://localhost:3000
 @apiBase = {{baseUrl}}/api
 @rackId = 00000000-0000-0000-0000-000000000101
-@commandId = 00000000-0000-0000-0000-000000000001
+@plantId = 00000000-0000-0000-0000-000000000501
+@actuatorId = 00000000-0000-0000-0000-000000000601
+@row = 1
+@column = 1
+@hours = 24
 
-### Health check
+### Health
 GET {{baseUrl}}/health
 
-### List racks
-GET {{apiBase}}/dashboard/racks
+### Rack Overview
+GET {{apiBase}}/racks
 
-### Latest sensor readings for a rack
-GET {{apiBase}}/sensor-readings/latest/{{rackId}}
+### Rack Snapshot (use rack UUID or rack number)
+GET {{apiBase}}/racks/{{rackId}}
 
-### Sensor history for a single position and type
-GET {{apiBase}}/sensor-readings/history?rack_id={{rackId}}&row=1&column=1&sensor_type=moisture_sensor&hours=6
+### Rack Plant Readings
+GET {{apiBase}}/racks/{{rackId}}/plants
 
-### Ingest a new sensor reading
-POST {{apiBase}}/sensor-readings
+### Rack Location History
+GET {{apiBase}}/racks/{{rackId}}/locations/{{row}}/{{column}}/history?hours={{hours}}
+
+### Plants
+POST {{apiBase}}/racks/{{rackId}}/locations/{{row}}/{{column}}/plants
 Content-Type: application/json
 
 {
-	"rack_id": "{{rackId}}",
-	"row": 1,
-	"column": 1,
-	"sensor_type": "moisture_sensor",
-	"value": {
-		"value": 56,
-		"unit": "percent"
-	}
+  "species_id": "00000000-0000-0000-0000-000000000201",
+  "display_name": "Butterhead Lettuce A1",
+  "status": "growing",
+  "notes": "Transplanted from nursery tray."
 }
 
-### Create an actuator command
-POST {{apiBase}}/actuator-commands
+### Update a plant (replace {{plantId}} with the id from the create response)
+PUT {{apiBase}}/plants/{{plantId}}
 Content-Type: application/json
 
 {
-	"rack_id": "{{rackId}}",
-	"row": 1,
-	"column": 1,
-	"actuator_type": "water_pump",
-	"action": "water",
-	"parameters": {
-		"duration_seconds": 10
-	}
+  "status": "harvested",
+  "notes": "Ready for shipment."
 }
 
-### List pending actuator commands
-GET {{apiBase}}/actuator-commands/pending
+### Remove a plant
+DELETE {{apiBase}}/plants/{{plantId}}
 
-### Update actuator command status
-PATCH {{apiBase}}/actuator-commands/{{commandId}}
+### Actuator Commands
+POST {{apiBase}}/actuators/{{actuatorId}}/commands
 Content-Type: application/json
 
 {
-	"status": "completed"
+  "action": "water",
+  "parameters": {
+    "duration_seconds": 10
+  },
+  "triggered_by": "client"
 }

@@ -1,13 +1,13 @@
 import express from "express";
 import cors from "cors";
 import type { Request, Response } from "express";
-import { sensorController } from "./controllers/sensor-controller";
 import { actuatorController } from "./controllers/actuator-controller";
-import { dashboardController } from "./controllers/dashboard-controller";
 import { errorHandler } from "./middleware/error-handler";
 import { env } from "./config/env";
-import { runMigrations } from "./lib/migrate";
+import { runMigrationsAndSeed } from "./lib/migrate";
 import { startMqttClient } from "./integrations/mqtt-client";
+import { plantController } from "./controllers/plant-controller";
+import { rackController } from "./controllers/rack-controller";
 
 const app = express();
 
@@ -22,14 +22,14 @@ app.get("/health", (_request: Request, response: Response) => {
   response.json({ status: "ok" });
 });
 
-app.use("/api", sensorController);
 app.use("/api", actuatorController);
-app.use("/api", dashboardController);
+app.use("/api", plantController);
+app.use("/api", rackController);
 
 app.use(errorHandler);
 
 async function bootstrap(): Promise<void> {
-  await runMigrations();
+  await runMigrationsAndSeed();
   startMqttClient();
 
   app.listen(env.PORT, () => {
@@ -37,9 +37,9 @@ async function bootstrap(): Promise<void> {
   });
 }
 
-  void bootstrap().catch((error) => {
+void bootstrap().catch((error) => {
   console.error("❌ Failed to start backend", error);
-    nodeProcess?.exit?.(1);
+  nodeProcess?.exit?.(1);
 });
 
 type ProcessLike = {

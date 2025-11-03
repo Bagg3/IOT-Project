@@ -60,7 +60,7 @@ export function RackGrid({ racks, rack, selectedRackId, onSelectRack, cells, onS
           )}
         </div>
       </CardHeader>
-      <CardContent className="flex flex-1 flex-col gap-6 pt-6">
+      <CardContent className="flex flex-1 flex-col gap-4 pt-4">
         {isError ? (
           <div className="rounded-lg border border-red-100 bg-red-50 p-4 text-sm text-red-700">
             Unable to load sensor readings. Check the gateway connection.
@@ -80,8 +80,8 @@ export function RackGrid({ racks, rack, selectedRackId, onSelectRack, cells, onS
           </div>
         ) : (
           <div
-            className="grid gap-4"
-            style={{ gridTemplateColumns: `repeat(auto-fill, minmax(200px, 1fr))` }}
+            className="grid gap-2"
+            style={{ gridTemplateColumns: `repeat(auto-fill, minmax(140px, 1fr))` }}
           >
             {cells.map((cell) => (
               <PlantCell

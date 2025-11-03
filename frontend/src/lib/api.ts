@@ -1,6 +1,8 @@
 import axios from "axios";
 import { parsePercentage } from "./utils";
-import { MOCK_RACKS, generateMockPlants } from "./mockData";
+import { MOCK_RACKS, generateMockPlants, generateHistoricalData, HistoricalDataPoint } from "./mockData";
+
+export type { HistoricalDataPoint };
 
 export interface RackSummary {
   id: string;
@@ -74,6 +76,12 @@ export async function fetchLatestSensorReadings(rackId: string): Promise<Plant[]
   const rackNumber = parseInt(rackId.replace("rack-", ""), 10);
   const mockPlants = generateMockPlants();
   return mockPlants.filter((plant) => plant.rack_number === rackNumber);
+}
+
+export async function fetchPlantHistory(rackId: string, row: number, column: number): Promise<HistoricalDataPoint[]> {
+  // Use mock data in development
+  const rackNumber = parseInt(rackId.replace("rack-", ""), 10);
+  return generateHistoricalData(row, column, rackNumber);
 }
 
 interface SensorHistoryPayload {

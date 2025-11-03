@@ -79,3 +79,53 @@ export function generateMockPlants(): Plant[] {
     };
   });
 }
+
+/**
+ * Historical data point for a plant
+ */
+export interface HistoricalDataPoint {
+  timestamp: string;
+  moisture: number;
+  light: number;
+}
+
+/**
+ * Generate mock historical data for a plant based on current time
+ * Returns 24 data points representing the last 24 hours (1 point per hour)
+ */
+export function generateHistoricalData(row: number, column: number, rackNumber: number): HistoricalDataPoint[] {
+  const now = Date.now();
+  const baseTimestamp = Math.floor(now / 3600000) * 3600000; // Round to nearest hour
+  const plantSeed = row * 10 + column + (rackNumber * 100);
+
+  const dataPoints: HistoricalDataPoint[] = [];
+
+  // Generate 24 historical points (one per hour)
+  for (let i = 23; i >= 0; i--) {
+    const timestamp = new Date(baseTimestamp - i * 3600000);
+    const timeKey = timestamp.getTime() / 3600000; // Hour-based key
+
+    // Create deterministic variations based on plant position and time
+    const hashValue = (plantSeed * 73856093 ^ Math.floor(timeKey) * 19349663) >>> 0;
+
+    // Create cyclic patterns that repeat roughly daily
+    const hourOfDay = timestamp.getHours();
+    const cycleFactor = Math.sin((hourOfDay / 24) * Math.PI * 2) * 15; // ±15% daily cycle
+
+    // Base values from MOCK_PLANTS_BASE
+    const basePlant = MOCK_PLANTS_BASE.find((p) => p.row === row && p.column === column && p.rack_number === rackNumber);
+    const baseMoisture = basePlant?.moisture_level ?? 50;
+    const baseLight = basePlant?.light_level ?? 70;
+
+    const moistureVariation = ((hashValue % 21) - 10) * 0.8 + cycleFactor * 0.5;
+    const lightVariation = (((hashValue >> 8) % 21) - 10) * 0.8 + cycleFactor;
+
+    dataPoints.push({
+      timestamp: timestamp.toISOString(),
+      moisture: Math.max(20, Math.min(90, baseMoisture + moistureVariation)),
+      light: Math.max(30, Math.min(95, baseLight + lightVariation))
+    });
+  }
+
+  return dataPoints;
+}

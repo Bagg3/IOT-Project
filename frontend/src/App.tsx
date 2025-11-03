@@ -80,14 +80,14 @@ export default function App() {
       <Modal
         open={Boolean(activeCell)}
         onClose={() => setActiveCell(null)}
-        title={
+        title={activeCell?.display_name || undefined}
+        description={
           activeCell
-            ? `Planter R${activeCell.row}C${activeCell.column}`
+            ? `Rack ${selectedRack?.rack_number} · Row ${activeCell.row} · Col ${activeCell.column}${activeCell.planted_at ? ` · ${new Date(activeCell.planted_at).toLocaleDateString()}` : ""}`
             : undefined
         }
-        description={selectedRack ? `Rack ${selectedRack.rack_number}` : undefined}
       >
-        {activeCell ? <ActuatorControls /> : null}
+        {activeCell ? <ActuatorControls cell={activeCell} rackId={selectedRackId} /> : null}
       </Modal>
     </div>
   );

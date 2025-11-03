@@ -1,26 +1,10 @@
 import { Router, type NextFunction, type Request, type Response } from "express";
 import { z } from "zod";
-import {
-  createPlant,
-  deletePlant,
-  getPlant,
-  listPlants,
-  updatePlant
-} from "../services/plant-service";
+import { createPlant, deletePlant, updatePlant } from "../services/plant-service";
 
 const router = Router();
 
-const listQuerySchema = z.object({
-  farm_id: z.string().trim().min(1).optional(),
-  rack_id: z.string().trim().min(1).optional(),
-  species_id: z.string().trim().min(1).optional(),
-  status: z.string().trim().min(1).optional()
-});
-
 const plantCreateSchema = z.object({
-  rack_id: z.string().trim().min(1),
-  row: z.number().int().positive(),
-  column: z.number().int().positive(),
   species_id: z.string().trim().min(1),
   display_name: z.string().trim().min(1).optional(),
   status: z.string().trim().min(1).optional(),
@@ -28,7 +12,7 @@ const plantCreateSchema = z.object({
   notes: z.string().trim().optional()
 });
 
-const plantPatchSchema = z
+const plantUpdateSchema = z
   .object({
     display_name: z.string().trim().min(1).optional(),
     status: z.string().trim().min(1).optional(),
@@ -40,45 +24,30 @@ const plantPatchSchema = z
     message: "At least one field must be provided for update"
   });
 
-router.get(
-  "/plants",
-  async (request: Request, response: Response, next: NextFunction) => {
-    try {
-      const query = listQuerySchema.parse(request.query);
-      const plants = await listPlants(query);
-      response.json(plants);
-    } catch (error) {
-      next(error);
-    }
-  }
-);
-
-router.get(
-  "/plants/:identifier",
-  async (request: Request, response: Response, next: NextFunction) => {
-    try {
-      const paramsSchema = z.object({ identifier: z.string().trim().min(1) });
-      const { identifier } = paramsSchema.parse(request.params);
-      const plant = await getPlant(identifier);
-
-      if (!plant) {
-        response.status(404).json({ message: "Plant not found" });
-        return;
-      }
-
-      response.json(plant);
-    } catch (error) {
-      next(error);
-    }
-  }
-);
+const rackLocationParamsSchema = z.object({
+  rackId: z.string().trim().min(1),
+  row: z.coerce.number().int().positive(),
+  column: z.coerce.number().int().positive()
+});
 
 router.post(
-  "/plants",
+  "/racks/:rackId/locations/:row/:column/plants",
   async (request: Request, response: Response, next: NextFunction) => {
     try {
+      const params = rackLocationParamsSchema.parse(request.params);
       const payload = plantCreateSchema.parse(request.body);
-      const plant = await createPlant(payload);
+
+      const plant = await createPlant({
+        rack_id: params.rackId,
+        row: params.row,
+        column: params.column,
+        species_id: payload.species_id,
+        display_name: payload.display_name ?? null,
+        status: payload.status ?? null,
+        planted_on: payload.planted_on ?? null,
+        notes: payload.notes ?? null
+      });
+
       response.status(201).json(plant);
     } catch (error) {
       next(error);
@@ -86,14 +55,14 @@ router.post(
   }
 );
 
-router.patch(
-  "/plants/:identifier",
+router.put(
+  "/plants/:plantId",
   async (request: Request, response: Response, next: NextFunction) => {
     try {
-      const paramsSchema = z.object({ identifier: z.string().trim().min(1) });
-      const { identifier } = paramsSchema.parse(request.params);
-      const payload = plantPatchSchema.parse(request.body);
-      const plant = await updatePlant(identifier, payload);
+      const paramsSchema = z.object({ plantId: z.string().trim().min(1) });
+      const { plantId } = paramsSchema.parse(request.params);
+      const payload = plantUpdateSchema.parse(request.body);
+      const plant = await updatePlant(plantId, payload);
       response.json(plant);
     } catch (error) {
       next(error);
@@ -102,12 +71,12 @@ router.patch(
 );
 
 router.delete(
-  "/plants/:identifier",
+  "/plants/:plantId",
   async (request: Request, response: Response, next: NextFunction) => {
     try {
-      const paramsSchema = z.object({ identifier: z.string().trim().min(1) });
-      const { identifier } = paramsSchema.parse(request.params);
-      await deletePlant(identifier);
+      const paramsSchema = z.object({ plantId: z.string().trim().min(1) });
+      const { plantId } = paramsSchema.parse(request.params);
+      await deletePlant(plantId);
       response.status(204).end();
     } catch (error) {
       next(error);

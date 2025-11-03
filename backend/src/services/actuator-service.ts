@@ -121,9 +121,9 @@ async function selectCommands(whereClause: string, parameters: unknown[]): Promi
   const result = await pool.query<CommandRow & QueryResultRow>(
     `SELECT
        ac.id,
-       COALESCE(ac.rack_identifier, r.rack_identifier, r.id::text) AS rack_id,
+       ac.rack_id::text AS rack_id,
        r.rack_number,
-       COALESCE(ac.farm_identifier, f.farm_identifier, f.id::text) AS farm_id,
+       f.id::text AS farm_id,
        ac.row,
        ac.column,
        ac.actuator_type,
@@ -185,11 +185,9 @@ export async function createActuatorCommand(
          plant_location_id,
          command_type,
          command_value,
-         triggered_by,
-         farm_identifier,
-         rack_identifier
+         triggered_by
        )
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        RETURNING
          id`,
       [
@@ -203,9 +201,7 @@ export async function createActuatorCommand(
         plantLocation.id,
         input.action,
         commandValue,
-        triggeredBy,
-        rack.farm_identifier,
-        rack.rack_identifier
+        triggeredBy
       ]
     );
 
@@ -279,4 +275,53 @@ export async function updateActuatorCommandStatus(
 
   const [command] = await selectCommands("ac.id = $1", [result.rows[0].id]);
   return command ?? null;
+}
+
+type ActuatorLookupRow = {
+  actuator_id: string;
+  actuator_type: string;
+  rack_id: string;
+  row: number;
+  column: number;
+} & QueryResultRow;
+
+export async function triggerActuatorById(
+  actuatorId: string,
+  action: string,
+  parameters?: Record<string, unknown> | null,
+  triggeredBy?: string | null
+): Promise<ActuatorCommandRecord> {
+  const actuatorResult = await pool.query<ActuatorLookupRow>(
+    `SELECT
+       a.id::text AS actuator_id,
+       at.type_name AS actuator_type,
+       r.id::text AS rack_id,
+       pl.row,
+       pl.column
+     FROM actuators a
+     JOIN actuator_types at ON at.id = a.actuator_type_id
+     JOIN plant_locations pl ON pl.id = a.plant_location_id
+     JOIN racks r ON r.id = pl.rack_id
+     WHERE a.id::text = $1
+     LIMIT 1`,
+    [actuatorId]
+  );
+
+  if (actuatorResult.rowCount === 0) {
+    throw new Error(`Actuator not found for id ${actuatorId}`);
+  }
+
+  const actuator = actuatorResult.rows[0];
+
+  const command = await createActuatorCommand({
+    rack_id: actuator.rack_id,
+    row: actuator.row,
+    column: actuator.column,
+    actuator_type: actuator.actuator_type,
+    action,
+    parameters: parameters ?? null,
+    triggered_by: triggeredBy ?? "dashboard"
+  });
+
+  return command;
 }

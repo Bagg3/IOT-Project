@@ -1,18 +1,13 @@
 import express from "express";
 import cors from "cors";
 import type { Request, Response } from "express";
-import { sensorController } from "./controllers/sensor-controller";
 import { actuatorController } from "./controllers/actuator-controller";
-import { dashboardController } from "./controllers/dashboard-controller";
 import { errorHandler } from "./middleware/error-handler";
 import { env } from "./config/env";
 import { runMigrationsAndSeed } from "./lib/migrate";
 import { startMqttClient } from "./integrations/mqtt-client";
 import { plantController } from "./controllers/plant-controller";
-import { speciesController } from "./controllers/species-controller";
-import { farmController } from "./controllers/farm-controller";
 import { rackController } from "./controllers/rack-controller";
-import { plantLocationController } from "./controllers/plant-location-controller";
 
 const app = express();
 
@@ -27,14 +22,9 @@ app.get("/health", (_request: Request, response: Response) => {
   response.json({ status: "ok" });
 });
 
-app.use("/api", sensorController);
 app.use("/api", actuatorController);
-app.use("/api", dashboardController);
 app.use("/api", plantController);
-app.use("/api", speciesController);
-app.use("/api", farmController);
 app.use("/api", rackController);
-app.use("/api", plantLocationController);
 
 app.use(errorHandler);
 
@@ -47,9 +37,9 @@ async function bootstrap(): Promise<void> {
   });
 }
 
-  void bootstrap().catch((error) => {
+void bootstrap().catch((error) => {
   console.error("❌ Failed to start backend", error);
-    nodeProcess?.exit?.(1);
+  nodeProcess?.exit?.(1);
 });
 
 type ProcessLike = {

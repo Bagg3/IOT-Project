@@ -10,17 +10,15 @@ export async function seedDatabase(client: PoolClient): Promise<void> {
   try {
     // Seed farm
     await client.query(`
-      INSERT INTO farms (id, farm_identifier, farm_name, address)
+      INSERT INTO farms (id, farm_name, address)
       VALUES (
         '00000000-0000-0000-0000-000000000001',
-        'farm_001',
         'Demo Farm',
         NULL
       )
       ON CONFLICT (id) DO UPDATE
       SET farm_name = EXCLUDED.farm_name,
-          address = EXCLUDED.address,
-          farm_identifier = EXCLUDED.farm_identifier
+          address = EXCLUDED.address
     `);
     console.log("  ✓ Farm seeded");
 
@@ -29,7 +27,6 @@ export async function seedDatabase(client: PoolClient): Promise<void> {
       INSERT INTO racks (
         id,
         farm_id,
-        rack_identifier,
         rack_number,
         rack_name,
         rows,
@@ -41,7 +38,6 @@ export async function seedDatabase(client: PoolClient): Promise<void> {
         (
           '00000000-0000-0000-0000-000000000101',
           '00000000-0000-0000-0000-000000000001',
-          'rack_001',
           1,
           'Rack 1',
           5,
@@ -52,7 +48,6 @@ export async function seedDatabase(client: PoolClient): Promise<void> {
         (
           '00000000-0000-0000-0000-000000000102',
           '00000000-0000-0000-0000-000000000001',
-          'rack_002',
           2,
           'Rack 2',
           5,
@@ -63,7 +58,6 @@ export async function seedDatabase(client: PoolClient): Promise<void> {
         (
           '00000000-0000-0000-0000-000000000103',
           '00000000-0000-0000-0000-000000000001',
-          'rack_003',
           3,
           'Rack 3',
           5,
@@ -72,13 +66,12 @@ export async function seedDatabase(client: PoolClient): Promise<void> {
           5
         )
       ON CONFLICT (id) DO UPDATE
-      SET rack_number = EXCLUDED.rack_number,
-          rack_name = EXCLUDED.rack_name,
+    SET rack_number = EXCLUDED.rack_number,
+      rack_name = EXCLUDED.rack_name,
           rows = EXCLUDED.rows,
           columns = EXCLUDED.columns,
           max_rows = EXCLUDED.max_rows,
-          max_columns = EXCLUDED.max_columns,
-          rack_identifier = EXCLUDED.rack_identifier
+      max_columns = EXCLUDED.max_columns
     `);
     console.log("  ✓ Racks seeded");
 
@@ -111,7 +104,6 @@ export async function seedDatabase(client: PoolClient): Promise<void> {
     await client.query(`
       INSERT INTO species (
         id,
-        species_identifier,
         species_name,
         scientific_name,
         optimal_moisture_min,
@@ -123,7 +115,6 @@ export async function seedDatabase(client: PoolClient): Promise<void> {
       )
       VALUES (
         '00000000-0000-0000-0000-000000000201',
-        'species_001',
         'Butterhead Lettuce',
         'Lactuca sativa',
         45,
@@ -134,8 +125,7 @@ export async function seedDatabase(client: PoolClient): Promise<void> {
         28
       )
       ON CONFLICT (id) DO UPDATE
-      SET species_identifier = EXCLUDED.species_identifier,
-          species_name = EXCLUDED.species_name,
+    SET species_name = EXCLUDED.species_name,
           scientific_name = EXCLUDED.scientific_name,
           optimal_moisture_min = EXCLUDED.optimal_moisture_min,
           optimal_moisture_max = EXCLUDED.optimal_moisture_max,
@@ -167,86 +157,6 @@ export async function seedDatabase(client: PoolClient): Promise<void> {
       $$;
     `);
     console.log("  ✓ Plant locations generated");
-
-    // Align identifier sequences with seeded data
-    await client.query(`
-      SELECT setval(
-        'farm_identifier_seq',
-        GREATEST(
-          COALESCE((
-            SELECT MAX((regexp_replace(farm_identifier, '\\D', '', 'g'))::INT)
-            FROM farms
-          ), 0),
-          1
-        )
-      );
-    `);
-
-    await client.query(`
-      SELECT setval(
-        'rack_identifier_seq',
-        GREATEST(
-          COALESCE((
-            SELECT MAX((regexp_replace(rack_identifier, '\\D', '', 'g'))::INT)
-            FROM racks
-          ), 0),
-          1
-        )
-      );
-    `);
-
-    await client.query(`
-      SELECT setval(
-        'species_identifier_seq',
-        GREATEST(
-          COALESCE((
-            SELECT MAX((regexp_replace(species_identifier, '\\D', '', 'g'))::INT)
-            FROM species
-          ), 0),
-          1
-        )
-      );
-    `);
-
-    await client.query(`
-      SELECT setval(
-        'plant_identifier_seq',
-        GREATEST(
-          COALESCE((
-            SELECT MAX((regexp_replace(plant_identifier, '\\D', '', 'g'))::INT)
-            FROM plants
-          ), 0),
-          1
-        )
-      );
-    `);
-
-    await client.query(`
-      SELECT setval(
-        'sensor_identifier_seq',
-        GREATEST(
-          COALESCE((
-            SELECT MAX((regexp_replace(sensor_identifier, '\\D', '', 'g'))::INT)
-            FROM sensors
-          ), 0),
-          1
-        )
-      );
-    `);
-
-    await client.query(`
-      SELECT setval(
-        'actuator_identifier_seq',
-        GREATEST(
-          COALESCE((
-            SELECT MAX((regexp_replace(actuator_identifier, '\\D', '', 'g'))::INT)
-            FROM actuators
-          ), 0),
-          1
-        )
-      );
-    `);
-    console.log("  ✓ Identifier sequences aligned");
 
     console.log("✅ Database seeding completed successfully!");
   } catch (error) {

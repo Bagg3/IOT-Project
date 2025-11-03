@@ -5,16 +5,13 @@ export type Queryable = Pick<PoolClient, "query">;
 
 export type ResolvedFarm = {
   id: string;
-  farm_identifier: string;
   farm_name: string;
 };
 
 export type ResolvedRack = {
   id: string;
-  rack_identifier: string;
   rack_number: number;
   farm_id: string;
-  farm_identifier: string;
   farm_name: string;
   max_rows: number;
   max_columns: number;
@@ -36,7 +33,6 @@ export type SensorTypeRow = {
 
 export type SensorRow = {
   id: string;
-  sensor_identifier: string | null;
   sensor_name: string | null;
   plant_location_id: string;
   sensor_type_id: string;
@@ -50,7 +46,6 @@ export type ActuatorTypeRow = {
 
 export type ActuatorRow = {
   id: string;
-  actuator_identifier: string | null;
   actuator_name: string | null;
   plant_location_id: string;
   actuator_type_id: string;
@@ -58,27 +53,25 @@ export type ActuatorRow = {
 
 export async function resolveRack(
   client: Queryable,
-  rackIdentifierOrId: string
+  rackIdOrNumber: string
 ): Promise<ResolvedRack> {
   const result = await client.query<ResolvedRack & QueryResultRow>(
     `SELECT
        r.id,
-       COALESCE(r.rack_identifier, r.id::text) AS rack_identifier,
        r.rack_number,
        r.farm_id,
-       COALESCE(f.farm_identifier, f.id::text) AS farm_identifier,
        f.farm_name,
        COALESCE(r.max_rows, r.rows) AS max_rows,
        COALESCE(r.max_columns, r.columns) AS max_columns
      FROM racks r
      JOIN farms f ON f.id = r.farm_id
-     WHERE r.id::text = $1 OR r.rack_identifier = $1
+     WHERE r.id::text = $1 OR r.rack_number::text = $1
      LIMIT 1`,
-    [rackIdentifierOrId]
+    [rackIdOrNumber]
   );
 
   if (result.rowCount === 0) {
-    throw new Error(`Rack not found for identifier ${rackIdentifierOrId}`);
+    throw new Error(`Rack not found for id or number ${rackIdOrNumber}`);
   }
 
   return result.rows[0];
@@ -134,7 +127,7 @@ export async function ensureSensor(
      VALUES ($1, $2, $3)
      ON CONFLICT (plant_location_id, sensor_type_id)
      DO UPDATE SET sensor_name = COALESCE(sensors.sensor_name, EXCLUDED.sensor_name), updated_at = NOW()
-     RETURNING id, sensor_identifier, sensor_name, plant_location_id, sensor_type_id`,
+     RETURNING id, sensor_name, plant_location_id, sensor_type_id`,
     [plantLocationId, sensorType.id, friendlyName]
   );
 
@@ -173,27 +166,27 @@ export async function ensureActuator(
      VALUES ($1, $2, $3)
      ON CONFLICT (plant_location_id, actuator_type_id)
      DO UPDATE SET actuator_name = COALESCE(actuators.actuator_name, EXCLUDED.actuator_name), updated_at = NOW()
-     RETURNING id, actuator_identifier, actuator_name, plant_location_id, actuator_type_id`,
+     RETURNING id, actuator_name, plant_location_id, actuator_type_id`,
     [plantLocationId, actuatorType.id, friendlyName]
   );
 
   return result.rows[0];
 }
 
-export async function resolveFarmByIdentifier(
+export async function resolveFarm(
   client: Queryable,
-  farmIdentifierOrId: string
+  farmIdOrName: string
 ): Promise<ResolvedFarm> {
   const result = await client.query<ResolvedFarm & QueryResultRow>(
-    `SELECT id, COALESCE(farm_identifier, id::text) AS farm_identifier, farm_name
+    `SELECT id, farm_name
      FROM farms
-     WHERE id::text = $1 OR farm_identifier = $1
+     WHERE id::text = $1 OR LOWER(farm_name) = LOWER($1)
      LIMIT 1`,
-    [farmIdentifierOrId]
+    [farmIdOrName]
   );
 
   if (result.rowCount === 0) {
-    throw new Error(`Farm not found for identifier ${farmIdentifierOrId}`);
+    throw new Error(`Farm not found for id or name ${farmIdOrName}`);
   }
 
   return result.rows[0];

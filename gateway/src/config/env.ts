@@ -2,11 +2,10 @@ import { z } from "zod";
 
 const schema = z.object({
   MQTT_URL: z.string().default("mqtt://localhost:1883"),
-  API_URL: z.string().url().default("http://localhost:3000/api"),
-  POLL_INTERVAL_MS: z
-    .string()
-    .default("2000")
-    .transform((value: string) => Number.parseInt(value, 10))
+  POLL_INTERVAL_MS: z.number().default(2000),
+  FARM_ID: z.number().default(0),
+  RACK_ID: z.number().default(0),
+  SENSOR_SCRIPT_PATH: z.string().default("../simulator/src/")
 });
 
 const envSource = (globalThis as typeof globalThis & {
@@ -20,4 +19,4 @@ if (!parsed.success) {
   throw new Error("Invalid gateway configuration");
 }
 
-export const env = parsed.data;
+export const config = parsed.data;

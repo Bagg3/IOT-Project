@@ -4,8 +4,7 @@
   "description": "MQTT gateway for GreenGrow",
   "type": "module",
   "scripts": {
-    "dev": "bun run --watch src/gateway.ts",
-    "start": "bun run src/gateway.ts"
+    "start": "bun run src/mqtt_client.ts"
   },
   "dependencies": {
     "mqtt": "^5.3.4",

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   type CellSnapshot,
   type RackSummary
-} from "./lib/api";
+} from "./lib";
 import { useRacks, useSensorData } from "./hooks";
 import { RackGrid } from "./components/RackGrid";
 import { Modal } from "./components/ui/modal";

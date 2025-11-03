@@ -1,5 +1,5 @@
 import { useQuery, type UseQueryResult } from "@tanstack/react-query";
-import { fetchPlantHistory, type HistoricalDataPoint } from "../lib/api";
+import { fetchPlantHistory, type HistoricalDataPoint } from "../lib";
 
 /**
  * Hook for fetching historical sensor data for a plant cell

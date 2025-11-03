@@ -1,4 +1,4 @@
-import type { CellSnapshot } from "../lib/api";
+import type { CellSnapshot } from "../lib";
 import { cn } from "../lib/utils";
 
 interface PlantCellProps {

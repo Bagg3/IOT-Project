@@ -1,4 +1,4 @@
-import type { CellSnapshot, RackSummary } from "../lib/api";
+import type { CellSnapshot, RackSummary } from "../lib";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { PlantCell } from "./PlantCell";
 import { Badge } from "./ui/badge";

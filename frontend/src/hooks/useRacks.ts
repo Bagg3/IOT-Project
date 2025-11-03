@@ -1,5 +1,5 @@
 import { useQuery, type UseQueryResult } from "@tanstack/react-query";
-import { fetchRacks, type RackSummary } from "../lib/api";
+import { fetchRacks, type RackSummary } from "../lib";
 
 /**
  * Hook for fetching all available racks

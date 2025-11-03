@@ -1,4 +1,4 @@
-﻿import { type CellSnapshot } from '../lib/api';
+﻿import { type CellSnapshot } from '../lib';
 import { activateWater, adjustLight } from '../lib/actuator';
 import { useHistoricalData } from '../hooks/useHistoricalData';
 import { useState } from 'react';

@@ -4,7 +4,7 @@ import {
   mapReadingsToCells,
   type CellSnapshot,
   type Plant
-} from "../lib/api";
+} from "../lib";
 
 /**
  * Hook for fetching real-time sensor data with configurable polling interval

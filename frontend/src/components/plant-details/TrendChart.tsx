@@ -93,6 +93,17 @@ export function TrendChart({ chartData, isLoading }: TrendChartProps) {
 }
 
 function ColorHistory({ chartData }: { chartData: ChartDataPoint[] }) {
+  if (chartData.length === 0) {
+    return (
+      <div className="mt-4 rounded-lg border border-slate-200 bg-white p-4">
+        <h4 className="mb-3 text-xs font-medium text-slate-600">Plant Color History</h4>
+        <div className="flex h-6 items-center justify-center text-xs text-slate-400">
+          No color data available
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="mt-4 rounded-lg border border-slate-200 bg-white p-4">
       <h4 className="mb-3 text-xs font-medium text-slate-600">Plant Color History</h4>
@@ -114,8 +125,8 @@ function ColorHistory({ chartData }: { chartData: ChartDataPoint[] }) {
         })}
       </div>
       <div className="mt-2 flex items-center justify-between text-xs text-slate-500">
-        <span>5 minutes</span>
-        <span>Recent snapshots</span>
+        <span>Recent history</span>
+        <span>{chartData.length} snapshots</span>
       </div>
     </div>
   );

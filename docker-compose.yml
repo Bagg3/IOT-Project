@@ -79,7 +79,15 @@ services:
     depends_on:
       - postgres
       - mosquitto
-
+      
+  frontend:
+      build:
+        context: ./frontend
+        dockerfile: Dockerfile
+      image: greengrow-frontend:latest
+      ports:
+        - "8080:80"
+      restart: unless-stopped
 volumes:
   postgres_data:
   mosquitto_data:

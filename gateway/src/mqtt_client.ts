@@ -67,8 +67,8 @@ async function pollSensors(): Promise<void> {
     const BaseTopicPattern = `greengrow/${config.FARM_ID}/${config.RACK_ID}`;
 
     try {
-        for (let row = 0; row < 5; row++) {
-            for (let column = 0; column < 5; column++) {
+        for (let row = 1; row < 6; row++) {
+            for (let column = 1; column < 6; column++) {
                 const topicMositure = `${BaseTopicPattern}/${row}/${column}/moisture_sensor/moisture_level`;
                 const topicLight = `${BaseTopicPattern}/${row}/${column}/light_sensor/light_level`;
                 const topicColor = `${BaseTopicPattern}/${row}/${column}/color_camera/plant_color`;

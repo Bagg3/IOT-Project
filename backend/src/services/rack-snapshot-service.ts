@@ -430,8 +430,8 @@ export async function getRackSnapshots(rackIdentifier?: string): Promise<RackSna
 
     rack.cells.push({
       location_id: row.plant_location_id,
-      row: row.row + 1,
-      column: row.column + 1,
+      row: row.row,
+      column: row.column,
       plant,
       latest_readings: sensors,
       actuators: parseActuatorList(row.actuator_list)

@@ -31,8 +31,6 @@ export default function App() {
     [racksQuery.data, selectedRackNumber]
   );
 
-  const cells = cellsQuery.data ?? [];
-
   useEffect(() => {
     if (!activeCell || !selectedRackNumber || activeCell.rack_number === selectedRackNumber) {
       return;
@@ -42,16 +40,21 @@ export default function App() {
 
   // Sync activeCell with updated sensor data
   useEffect(() => {
-    if (!activeCell) {
-      return;
-    }
+    if (!activeCell) return;
+    
+    const cells = cellsQuery.data;
+    if (!cells) return;
+
+    
     const updatedCell = cells.find(
       (cell) => cell.row === activeCell.row && cell.column === activeCell.column
     );
+
     if (updatedCell) {
       setActiveCell(updatedCell);
     }
-  }, [cells]);
+
+  }, [cellsQuery]);
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -82,7 +85,7 @@ export default function App() {
             rack={selectedRack}
             selectedRackNumber={selectedRackNumber}
             onSelectRack={setSelectedRackNumber}
-            cells={cells}
+            cells={cellsQuery.data ?? []}
             onSelectCell={setActiveCell}
             isLoading={cellsQuery.isLoading}
             isError={cellsQuery.isError}

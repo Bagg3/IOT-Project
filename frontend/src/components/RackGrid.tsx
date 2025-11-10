@@ -90,7 +90,7 @@ export function RackGrid({ racks, rack, selectedRackNumber, onSelectRack, cells,
                   const column = colIndex + 1;
                   const cell = cells.find((c) => c.row === row && c.column === column);
                   return (
-                    <div key={`${row}:${column}`} className="min-h-0">
+                    <div key={`${rack}:${row}:${column}`} className="min-h-0">
                       {cell ? (
                         <PlantCell cell={cell} onSelect={onSelectCell} />
                       ) : (

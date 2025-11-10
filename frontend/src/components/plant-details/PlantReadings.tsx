@@ -38,7 +38,7 @@ export function PlantReadings({ moisturePercent, lightPercent }: PlantReadingsPr
         <div className="w-full bg-slate-200 rounded-full h-1.5">
           <div
             className="bg-amber-500 h-1.5 rounded-full transition-all"
-            style={{ width: `${Math.max(0, Math.min(100, lightPercent ?? 0))}%` }}
+            style={{ width: `${Math.max(0, Math.min(100, lightPercent ? ((lightPercent/20000) * 100) : 0))}%` }}
           />
         </div>
       </div>

@@ -6,7 +6,7 @@ import { getColorHexCode, getLightLux, getMoisturePercentage } from "./edge_logi
 const mqttClient = mqtt.connect(config.MQTT_URL);
 
 mqttClient.on("connect", () => {
-    console.log(`🔌 Gateway connected to MQTT broker at ${config.MQTT_URL}`);
+    console.log(`Gateway connected to MQTT broker at ${config.MQTT_URL}`);
     const waterPumpTopicPattern = `greengrow/${config.FARM_ID}/${config.RACK_ID}/+/+/water_pump/+`;
     mqttClient.subscribe(waterPumpTopicPattern, (error: Error | null) => {
         if (error) {

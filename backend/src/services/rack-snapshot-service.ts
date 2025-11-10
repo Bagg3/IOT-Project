@@ -76,6 +76,7 @@ export type HistoricalDataPoint = {
   timestamp: string;
   moisture: number | null;
   light: number | null;
+  color: string | null;
 };
 
 type RackSnapshotRow = {
@@ -531,42 +532,112 @@ export async function getPlantLocationHistory(
     return [];
   }
 
-  const readings = await pool.query<HistoricalRow>(
-    `SELECT recorded_at, LOWER(sensor_type) AS sensor_type, reading_value, value
-     FROM sensor_readings
-     WHERE rack_id = $1
-       AND "row" = $2
-       AND "column" = $3
-       AND recorded_at >= $4
-       AND recorded_at <= $5
-       AND LOWER(sensor_type) IN ('moisture_sensor', 'light_sensor')
-     ORDER BY recorded_at ASC`,
-    [rack.id, row, column, start.toISOString(), end.toISOString()]
-  );
-
-  const points = new Map<string, HistoricalDataPoint>();
-
-  for (const rowData of readings.rows) {
-    const timestamp = rowData.recorded_at.toISOString();
-    const existing = points.get(timestamp) ?? {
-      timestamp,
-      moisture: null,
-      light: null
-    };
-
-    const payload = parseJson(rowData.value);
-    const value = extractNumeric(payload, rowData.reading_value);
-
-    if (rowData.sensor_type === "moisture_sensor") {
-      existing.moisture = value === null ? null : value * 100;
-    } else if (rowData.sensor_type === "light_sensor") {
-      existing.light = value;
-    }
-
-    points.set(timestamp, existing);
+  // Calculate optimal bucket interval based on time range
+  const timeRangeMs = end.getTime() - start.getTime();
+  const timeRangeHours = timeRangeMs / (1000 * 60 * 60);
+  
+  let bucketInterval: string;
+  if (timeRangeHours <= 1) {
+    bucketInterval = '2 minutes';      // ~30 points for 1 hour
+  } else if (timeRangeHours <= 6) {
+    bucketInterval = '15 minutes';     // ~24 points for 6 hours
+  } else if (timeRangeHours <= 24) {
+    bucketInterval = '1 hour';         // ~24 points for 24 hours
+  } else if (timeRangeHours <= 168) {  // 1 week
+    bucketInterval = '6 hours';        // ~28 points for 1 week
+  } else if (timeRangeHours <= 720) {  // 30 days
+    bucketInterval = '1 day';          // ~30 points for 30 days
+  } else {
+    bucketInterval = '3 days';         // ~20 points for 60 days
   }
 
-  return Array.from(points.values()).sort((a, b) => a.timestamp.localeCompare(b.timestamp));
+  // Use PostgreSQL's date_bin for efficient time bucketing
+  const aggregatedReadings = await pool.query<{
+    bucket: Date;
+    avg_moisture: number | null;
+    avg_light: number | null;
+    latest_color: string | null;
+  } & QueryResultRow>(
+    `WITH bucketed_data AS (
+      SELECT
+        date_bin($6::interval, recorded_at, $4::timestamptz) AS bucket,
+        LOWER(sensor_type) AS sensor_type,
+        CASE 
+          WHEN LOWER(sensor_type) = 'moisture_sensor' THEN
+            COALESCE(
+              reading_value,
+              CASE 
+                WHEN jsonb_typeof(value::jsonb) = 'number' THEN (value::jsonb)::text::numeric
+                WHEN value::jsonb ? 'value' AND jsonb_typeof(value::jsonb->'value') = 'number' THEN (value::jsonb->>'value')::numeric
+                ELSE NULL
+              END
+            ) * 100
+          WHEN LOWER(sensor_type) = 'light_sensor' THEN
+            COALESCE(
+              reading_value,
+              CASE 
+                WHEN jsonb_typeof(value::jsonb) = 'number' THEN (value::jsonb)::text::numeric
+                WHEN value::jsonb ? 'value' AND jsonb_typeof(value::jsonb->'value') = 'number' THEN (value::jsonb->>'value')::numeric
+                ELSE NULL
+              END
+            )
+          ELSE NULL
+        END AS numeric_value,
+        CASE
+          WHEN LOWER(sensor_type) = 'color_camera' THEN
+            COALESCE(
+              value::jsonb->>'hex',
+              value::jsonb->>'color',
+              value::jsonb->>'colour',
+              value::jsonb->>'status_color',
+              value::jsonb->>'value'
+            )
+          ELSE NULL
+        END AS color_value,
+        recorded_at
+      FROM sensor_readings
+      WHERE rack_id = $1
+        AND "row" = $2
+        AND "column" = $3
+        AND recorded_at >= $4
+        AND recorded_at <= $5
+        AND LOWER(sensor_type) IN ('moisture_sensor', 'light_sensor', 'color_camera')
+    )
+    SELECT
+      bucket,
+      AVG(CASE WHEN sensor_type = 'moisture_sensor' THEN numeric_value END) AS avg_moisture,
+      AVG(CASE WHEN sensor_type = 'light_sensor' THEN numeric_value END) AS avg_light,
+      (array_remove(array_agg(color_value ORDER BY recorded_at DESC) FILTER (WHERE sensor_type = 'color_camera'), NULL))[1] AS latest_color
+    FROM bucketed_data
+    GROUP BY bucket
+    ORDER BY bucket ASC`,
+    [rack.id, row, column, start.toISOString(), end.toISOString(), bucketInterval]
+  );
+
+  if (aggregatedReadings.rowCount === 0) {
+    return [];
+  }
+
+  // Fill null values with last known values (forward-fill)
+  const result: HistoricalDataPoint[] = [];
+  let lastMoisture: number | null = null;
+  let lastLight: number | null = null;
+  let lastColor: string | null = null;
+
+  for (const reading of aggregatedReadings.rows) {
+    if (reading.avg_moisture !== null) lastMoisture = reading.avg_moisture;
+    if (reading.avg_light !== null) lastLight = reading.avg_light;
+    if (reading.latest_color !== null) lastColor = reading.latest_color;
+
+    result.push({
+      timestamp: reading.bucket.toISOString(),
+      moisture: reading.avg_moisture ?? lastMoisture,
+      light: reading.avg_light ?? lastLight,
+      color: reading.latest_color ?? lastColor
+    });
+  }
+
+  return result;
 }
 
 function parseDateAtMidnight(value: string | null): Date | null {

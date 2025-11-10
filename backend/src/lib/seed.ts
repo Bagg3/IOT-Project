@@ -202,6 +202,80 @@ const PLANT_LAYOUT: Record<number, PlantSlot[][]> = {
       { species: "Blackberry" },
       { species: "Gooseberry" }
     ]
+  ],
+  4: [
+    [
+      { species: "English Thyme" },
+      { species: "Greek Oregano" },
+      { species: "Tuscan Rosemary" },
+      { species: "Sage" },
+      { species: "Curly Parsley" }
+    ],
+    [
+      { species: "Genovese Basil" },
+      { species: "Thai Basil" },
+      { species: "Lemon Balm" },
+      { species: "Spearmint" },
+      { species: "Cilantro" }
+    ],
+    [
+      { species: "Butterhead Lettuce" },
+      { species: "Baby Spinach" },
+      { species: "Red Russian Kale" },
+      { species: "Swiss Chard" },
+      { species: "Wild Arugula" }
+    ],
+    [
+      { species: "Cherry Tomato" },
+      { species: "Bell Pepper" },
+      { species: "Japanese Eggplant" },
+      { species: "English Cucumber" },
+      { species: "Romanesco Zucchini" }
+    ],
+    [
+      { species: "Strawberry" },
+      { species: "Raspberry" },
+      { species: "Blueberry" },
+      { species: "Blackberry" },
+      { species: "Gooseberry" }
+    ]
+  ],
+  5: [
+    [
+      { species: "Bok Choy" },
+      { species: "Pak Choy" },
+      { species: "Tat Soi" },
+      { species: "Watercress" },
+      { species: "Collard Greens" }
+    ],
+    [
+      { species: "Golden Beet" },
+      { species: "French Radish" },
+      { species: "Broccolini" },
+      { species: "Cauliflower" },
+      { species: "Brussels Sprout" }
+    ],
+    [
+      { species: "Rainbow Chard" },
+      { species: "Sorrel" },
+      { species: "Chervil" },
+      { species: "Lovage" },
+      { species: "Butterhead Lettuce" }
+    ],
+    [
+      { species: "Sugar Snap Pea" },
+      { species: "Cherry Tomato" },
+      { species: "Bell Pepper" },
+      { species: "Romanesco Zucchini" },
+      { species: "English Cucumber" }
+    ],
+    [
+      { species: "Genovese Basil" },
+      { species: "Thai Basil" },
+      { species: "Cilantro" },
+      { species: "Spearmint" },
+      { species: "Curly Parsley" }
+    ]
   ]
 };
 
@@ -313,6 +387,26 @@ export async function seedDatabase(client: PoolClient): Promise<void> {
           '00000000-0000-0000-0000-000000000001',
           3,
           'Rack 3',
+          5,
+          5,
+          5,
+          5
+        ),
+        (
+          '00000000-0000-0000-0000-000000000104',
+          '00000000-0000-0000-0000-000000000001',
+          4,
+          'Rack 4',
+          5,
+          5,
+          5,
+          5
+        ),
+        (
+          '00000000-0000-0000-0000-000000000105',
+          '00000000-0000-0000-0000-000000000001',
+          5,
+          'Rack 5',
           5,
           5,
           5,

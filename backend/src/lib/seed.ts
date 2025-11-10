@@ -247,7 +247,7 @@ function getPlantProfile(
 
   return {
     speciesId: speciesRecord.id,
-    displayName: `${commonName} - ${locationLabel}`,
+    displayName: commonName,
     notes: `Demo seed for ${commonName} at ${locationLabel}.`,
     locationLabel
   };

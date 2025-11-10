@@ -27,7 +27,7 @@ export function TrendChart({ chartData, isLoading }: TrendChartProps) {
   return (
     <div className="rounded-lg border border-slate-200 bg-slate-50 p-1.5">
       <ResponsiveContainer width="100%" height={200}>
-        <LineChart data={chartData} margin={{ top: 3, right: 15, left: -10, bottom: 3 }}>
+        <LineChart data={chartData} margin={{ top: 3, right: 10, left: 10, bottom: 3 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
           <XAxis
             dataKey="time"
@@ -39,7 +39,7 @@ export function TrendChart({ chartData, isLoading }: TrendChartProps) {
             yAxisId="left"
             tick={{ fontSize: 9 }}
             stroke="#64748b"
-            domain={[20, 90]}
+            domain={['auto', 'auto']}
             width={25}
           />
           <YAxis
@@ -47,7 +47,7 @@ export function TrendChart({ chartData, isLoading }: TrendChartProps) {
             orientation="right"
             tick={{ fontSize: 9 }}
             stroke="#64748b"
-            domain={[30, 95]}
+            domain={['auto', 'auto']}
             width={25}
           />
           <Tooltip

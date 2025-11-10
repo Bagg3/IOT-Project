@@ -46,15 +46,77 @@ services:
       timeout: 10s
       retries: 3
 
-  gateway:
+  gateway-1:
     build:
       context: .
-    container_name: gateway
+    container_name: gateway-1
     restart: unless-stopped
     environment:
       NODE_ENV: development
       SENSOR_SCRIPT_PATH: /app/simulator/src/
       MQTT_URL: mqtt://mosquitto:1883
+      RACK_ID: 1
+      FARM_ID: 1
+    depends_on:
+      - mosquitto
+      - postgres
+
+  gateway-2:
+    build:
+      context: .
+    container_name: gateway-2
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      SENSOR_SCRIPT_PATH: /app/simulator/src/
+      MQTT_URL: mqtt://mosquitto:1883
+      RACK_ID: 2
+      FARM_ID: 2
+    depends_on:
+      - mosquitto
+      - postgres
+
+  gateway-3:
+    build:
+      context: .
+    container_name: gateway-3
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      SENSOR_SCRIPT_PATH: /app/simulator/src/
+      MQTT_URL: mqtt://mosquitto:1883
+      RACK_ID: 3
+      FARM_ID: 3
+    depends_on:
+      - mosquitto
+      - postgres
+
+  gateway-4:
+    build:
+      context: .
+    container_name: gateway-4
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      SENSOR_SCRIPT_PATH: /app/simulator/src/
+      MQTT_URL: mqtt://mosquitto:1883
+      RACK_ID: 4
+      FARM_ID: 4
+    depends_on:
+      - mosquitto
+      - postgres
+
+  gateway-5:
+    build:
+      context: .
+    container_name: gateway-5
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      SENSOR_SCRIPT_PATH: /app/simulator/src/
+      MQTT_URL: mqtt://mosquitto:1883
+      RACK_ID: 5
+      FARM_ID: 5
     depends_on:
       - mosquitto
       - postgres

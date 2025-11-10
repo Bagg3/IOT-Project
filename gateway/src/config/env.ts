@@ -3,8 +3,8 @@ import { z } from "zod";
 const schema = z.object({
   MQTT_URL: z.string().default("mqtt://localhost:1883"),
   POLL_INTERVAL_MS: z.number().default(2000),
-  FARM_ID: z.number().default(0),
-  RACK_ID: z.number().default(0),
+  FARM_ID: z.number().default(1),
+  RACK_ID: z.number().default(1),
   SENSOR_SCRIPT_PATH: z.string().default("../simulator/src/")
 });
 

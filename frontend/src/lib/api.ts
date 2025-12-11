@@ -131,24 +131,24 @@ export async function debugApiEndpoint(
     // Test basic connectivity
     console.log(`[DEBUG] 1. Testing basic API connectivity with /racks endpoint...`);
     const racks = await fetchRacks();
-    console.log(`[DEBUG] ✅ Basic API connection successful. Found ${racks.length} racks:`, racks);
+    console.log(`[DEBUG] Basic API connection successful. Found ${racks.length} racks:`, racks);
     
     // Test plant history endpoint
     console.log(`[DEBUG] 2. Testing plant history endpoint...`);
     const history = await fetchPlantHistory(rackNumber, row, column, 1);
-    console.log(`[DEBUG] ✅ Plant history request completed. Data points: ${history.length}`);
+    console.log(`[DEBUG] Plant history request completed. Data points: ${history.length}`);
     
     if (history.length > 0) {
       console.log(`[DEBUG] Sample history data:`, history[0]);
     } else {
-      console.log(`[DEBUG] ⚠️ No historical data returned - this might indicate:`);
+      console.log(`[DEBUG]  No historical data returned - this might indicate:`);
       console.log(`[DEBUG]    - No data exists for Rack ${rackNumber}, Row ${row}, Col ${column}`);
       console.log(`[DEBUG]    - Backend endpoint expects different parameter format`);
       console.log(`[DEBUG]    - Row/column indexing mismatch (try 1-based indexing)`);
     }
     
   } catch (error) {
-    console.error(`[DEBUG] ❌ API test failed:`, error);
+    console.error(`[DEBUG] API test failed:`, error);
     console.log(`[DEBUG] Troubleshooting steps:`);
     console.log(`[DEBUG] 1. Check if backend server is running`);
     console.log(`[DEBUG] 2. Verify VITE_API_BASE_URL in .env.local: ${API_BASE_URL}`);

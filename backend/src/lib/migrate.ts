@@ -12,9 +12,9 @@ export async function runMigrations(): Promise<void> {
   try {
     const sql = await readFile(schemaPath, "utf8");
     await client.query(sql);
-    console.log("✅ Database schema ensured");
+    console.log("Database schema ensured");
   } catch (error) {
-    console.error("❌ Failed to run migrations", error);
+    console.error("Failed to run migrations", error);
     throw error;
   } finally {
     client.release();
@@ -27,12 +27,12 @@ export async function runMigrationsAndSeed(): Promise<void> {
     // Run schema migration
     const sql = await readFile(schemaPath, "utf8");
     await client.query(sql);
-    console.log("✅ Database schema ensured");
+    console.log("Database schema ensured");
     
     // Run seed data
     await seedDatabase(client);
   } catch (error) {
-    console.error("❌ Failed to run migrations and seed", error);
+    console.error("Failed to run migrations and seed", error);
     throw error;
   } finally {
     client.release();

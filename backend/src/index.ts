@@ -33,12 +33,12 @@ async function bootstrap(): Promise<void> {
   startMqttClient();
 
   app.listen(env.PORT, () => {
-    console.log(`🚀 Backend running on http://localhost:${env.PORT}`);
+    console.log(`Backend running on http://localhost:${env.PORT}`);
   });
 }
 
 void bootstrap().catch((error) => {
-  console.error("❌ Failed to start backend", error);
+  console.error("Failed to start backend", error);
   nodeProcess?.exit?.(1);
 });
 
@@ -50,9 +50,9 @@ type ProcessLike = {
 const nodeProcess = (globalThis as typeof globalThis & { process?: ProcessLike }).process;
 
 nodeProcess?.on("uncaughtException", (value) => {
-  console.error("❌ Uncaught exception", value);
+  console.error("Uncaught exception", value);
 });
 
 nodeProcess?.on("unhandledRejection", (value) => {
-  console.error("❌ Unhandled rejection", value);
+  console.error("Unhandled rejection", value);
 });

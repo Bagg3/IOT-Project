@@ -609,11 +609,11 @@ export async function seedDatabase(client: PoolClient): Promise<void> {
       }
     }
 
-    console.log("  ✓ Plants, sensors, and actuators seeded for every rack position");
+    console.log("Plants, sensors, and actuators seeded for every rack position");
 
-    console.log("✅ Database seeding completed successfully!");
+    console.log("Database seeding completed successfully!");
   } catch (error) {
-    console.error("❌ Error seeding database:", error);
+    console.error("Error seeding database:", error);
     throw error;
   }
 }

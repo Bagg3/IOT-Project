@@ -1,6 +1,6 @@
 ﻿import { type CellSnapshot } from '../lib';
 import { useHistoricalData, useActivateWater, useAdjustLight } from '../hooks';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { formatHistoricalData } from '../lib/plantDetailsHelpers';
 import { PlantReadings } from './plant-details/PlantReadings';
 import { ActuatorButtons } from './plant-details/ActuatorButtons';
@@ -14,19 +14,17 @@ interface PlantDetailsProps {
 export default function PlantDetails({ cell, rackNumber }: PlantDetailsProps) {
   const waterMutation = useActivateWater();
   const lightMutation = useAdjustLight();
+  const [timeInterval, setTimeInterval] = useState<number>(1); // Default to 1 hour
 
   const { data: historicalData, isLoading: isHistoryLoading } = useHistoricalData(
     rackNumber ?? null,
     cell.row,
     cell.column,
+    timeInterval,
     10000
   );
 
   const chartData = formatHistoricalData(historicalData ?? []);
-
-  // Debug logging
-  console.log(`[PlantDetails] Historical data:`, historicalData);
-  console.log(`[PlantDetails] Chart data:`, chartData);
 
   const handleWaterAction = () => {
     if (rackNumber === null || rackNumber === undefined) return;
@@ -87,11 +85,12 @@ export default function PlantDetails({ cell, rackNumber }: PlantDetailsProps) {
       </div>
 
       <div className='space-y-1'>
-        <div className='flex items-center justify-between'>
-          <h3 className='text-xs font-semibold text-slate-700 uppercase tracking-wide'>Last Hour Trends</h3>
-          {isHistoryLoading && <span className='text-xs text-slate-500'>Updating</span>}
-        </div>
-        <TrendChart chartData={chartData} isLoading={isHistoryLoading} />
+        <TrendChart 
+          chartData={chartData} 
+          isLoading={isHistoryLoading} 
+          timeInterval={timeInterval}
+          onTimeIntervalChange={setTimeInterval}
+        />
       </div>
     </div>
   );

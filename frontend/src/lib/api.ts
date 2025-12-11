@@ -12,8 +12,6 @@ async function apiRequest<T>(endpoint: string): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
   
   try {
-    console.log(`[API Request] ${url}`);
-    
     const response = await fetch(url, {
       method: "GET",
       headers: {
@@ -21,25 +19,14 @@ async function apiRequest<T>(endpoint: string): Promise<T> {
       },
     });
 
-    console.log(`[API Response] Status: ${response.status} ${response.statusText}`);
-
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`[API Error] Response body:`, errorText);
       throw new Error(`API request failed: ${response.status} ${response.statusText} - ${errorText}`);
     }
 
     const data = await response.json();
-    console.log(`[API Success] ${endpoint}:`, data);
     return data;
   } catch (error) {
-    console.error(`[API Error] ${endpoint}:`, error);
-    
-    // More detailed error logging
-    if (error instanceof TypeError && error.message.includes('fetch')) {
-      console.error('[API Error] Network error - check if backend is running and CORS is configured');
-    }
-    
     throw error;
   }
 }
@@ -80,12 +67,10 @@ export async function fetchPlantHistory(
 ): Promise<HistoricalDataPoint[]> {
   // Validate input parameters
   if (!rackNumber || rackNumber < 1) {
-    console.error(`[API] Invalid rack number: ${rackNumber}`);
     return [];
   }
   
   if (row < 0 || column < 0) {
-    console.error(`[API] Invalid row/column: ${row}/${column}`);
     return [];
   }
   
@@ -95,46 +80,17 @@ export async function fetchPlantHistory(
   const fullEndpoint = `${endpoint}?${params}`;
   const fullUrl = `${API_BASE_URL}${fullEndpoint}`;
   
-  console.log(`[API] === PLANT HISTORY REQUEST ===`);
-  console.log(`[API] Full URL: ${fullUrl}`);
-  console.log(`[API] Parameters: Rack=${rackNumber}, Row=${row}, Col=${column}, Hours=${hours}`);
-  console.log(`[API] Environment API_BASE_URL: ${API_BASE_URL}`);
+  console.log(`Trend for Rack ${rackNumber}, Row ${row}, Col ${column}, Hours: ${hours}`);
   
   try {
     const data = await apiRequest<HistoricalDataPoint[]>(fullEndpoint);
     
     if (!Array.isArray(data)) {
-      console.error(`[API] Expected array but received:`, typeof data, data);
       return [];
-    }
-    
-    console.log(`[API] Plant history SUCCESS: ${data.length} data points received`);
-    
-    // Log first few data points for debugging
-    if (data.length > 0) {
-      console.log(`[API] Sample data points:`, data.slice(0, 3));
-    } else {
-      console.warn(`[API] No historical data points returned for Rack ${rackNumber}, Row ${row}, Col ${column}`);
     }
     
     return data;
   } catch (error) {
-    console.error(`[API] === PLANT HISTORY ERROR ===`);
-    console.error(`[API] URL: ${fullUrl}`);
-    console.error(`[API] Error details:`, error);
-    
-    if (error instanceof Error) {
-      console.error(`[API] Error message: ${error.message}`);
-      console.error(`[API] Error stack:`, error.stack);
-    }
-    
-    // Check if it's a network error
-    if (error instanceof TypeError && error.message.includes('fetch')) {
-      console.error(`[API] Network error - is the backend server running at ${API_BASE_URL}?`);
-    }
-    
-    // Return empty array instead of throwing to prevent UI crashes
-    console.warn(`[API] Returning empty array as fallback for plant history`);
     return [];
   }
 }

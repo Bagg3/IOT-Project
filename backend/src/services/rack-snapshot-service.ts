@@ -484,7 +484,7 @@ export async function getPlantLocationHistory(
   rackIdentifier: string,
   row: number,
   column: number,
-  options: { from?: Date; to?: Date; hours?: number } = {}
+  hours: number
 ): Promise<HistoricalDataPoint[]> {
   const rack = await resolveRack(pool, rackIdentifier);
   const location = await ensurePlantLocation(pool, rack.id, row, column);
@@ -511,19 +511,20 @@ export async function getPlantLocationHistory(
   const plantedAt = parseDateAtMidnight(plant.planted_on) ?? now;
   const harvestedAt = plant.harvested_on ? parseDateAtMidnight(plant.harvested_on) : null;
 
-  const effectiveHours = options.from || options.to ? undefined : options.hours ?? 24;
-
-  if (effectiveHours !== undefined && effectiveHours <= 0) {
+  if (hours <= 0) {
     return [];
   }
 
-  let start = options.from ?? (effectiveHours ? new Date(now.getTime() - effectiveHours * 60 * 60 * 1000) : plantedAt);
-  let end = options.to ?? now;
+  // Calculate time range based on hours parameter
+  let start = new Date(now.getTime() - hours * 60 * 60 * 1000);
+  let end = now;
 
+  // Ensure we don't query before the plant was planted
   if (start < plantedAt) {
     start = plantedAt;
   }
 
+  // Ensure we don't query after the plant was harvested
   if (harvestedAt && harvestedAt < end) {
     end = harvestedAt;
   }
@@ -532,23 +533,29 @@ export async function getPlantLocationHistory(
     return [];
   }
 
-  // Calculate optimal bucket interval based on time range
+  // Calculate bucket interval to return up to 20 data points
   const timeRangeMs = end.getTime() - start.getTime();
   const timeRangeHours = timeRangeMs / (1000 * 60 * 60);
+  const targetDataPoints = 20;
+  const bucketSizeHours = timeRangeHours / targetDataPoints;
   
   let bucketInterval: string;
-  if (timeRangeHours <= 1) {
-    bucketInterval = '2 minutes';      // ~30 points for 1 hour
-  } else if (timeRangeHours <= 6) {
-    bucketInterval = '15 minutes';     // ~24 points for 6 hours
-  } else if (timeRangeHours <= 24) {
-    bucketInterval = '1 hour';         // ~24 points for 24 hours
-  } else if (timeRangeHours <= 168) {  // 1 week
-    bucketInterval = '6 hours';        // ~28 points for 1 week
-  } else if (timeRangeHours <= 720) {  // 30 days
-    bucketInterval = '1 day';          // ~30 points for 30 days
+  if (bucketSizeHours < 0.1) {  // Less than 6 minutes
+    bucketInterval = '5 minutes';
+  } else if (bucketSizeHours < 0.5) {  // Less than 30 minutes
+    bucketInterval = '15 minutes';
+  } else if (bucketSizeHours < 1) {  // Less than 1 hour
+    bucketInterval = '30 minutes';
+  } else if (bucketSizeHours < 2) {
+    bucketInterval = '1 hour';
+  } else if (bucketSizeHours < 6) {
+    bucketInterval = '3 hours';
+  } else if (bucketSizeHours < 12) {
+    bucketInterval = '6 hours';
+  } else if (bucketSizeHours < 24) {
+    bucketInterval = '12 hours';
   } else {
-    bucketInterval = '3 days';         // ~20 points for 60 days
+    bucketInterval = '1 day';
   }
 
   // Use PostgreSQL's date_bin for efficient time bucketing

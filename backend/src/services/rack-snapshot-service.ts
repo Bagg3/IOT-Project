@@ -533,11 +533,9 @@ export async function getPlantLocationHistory(
     return [];
   }
 
-  // Calculate bucket interval to return up to 20 data points
-  const timeRangeMs = end.getTime() - start.getTime();
-  const timeRangeHours = timeRangeMs / (1000 * 60 * 60);
+  // Calculate bucket interval to return approximately 20 data points
   const targetDataPoints = 20;
-  const bucketSizeHours = timeRangeHours / targetDataPoints;
+  const bucketSizeHours = hours / targetDataPoints;
   
   let bucketInterval: string;
   if (bucketSizeHours < 0.1) {  // Less than 6 minutes

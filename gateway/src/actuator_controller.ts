@@ -28,11 +28,13 @@ export function handleCommand({ row, column, actuator, action, value }: handleCo
 }
 
 async function handleWaterPump(value: number) {
+    console.log("Activating water pump for", value, "seconds");
     execSync(`bun ${config.SENSOR_SCRIPT_PATH}water_actuator.ts 5`);
     await sleep(value * 1000); // Sleep x seconds
     execSync(`bun ${config.SENSOR_SCRIPT_PATH}water_actuator.ts 0`);
 }
 
 async function handleLamp(value: number) {
-    execSync(`bun ${config.SENSOR_SCRIPT_PATH}water_actuator.ts ${value % 5}`);
+    console.log("Setting light intensity to", value);
+    execSync(`bun ${config.SENSOR_SCRIPT_PATH}light_actuator.ts ${value % 5}`);
 } 

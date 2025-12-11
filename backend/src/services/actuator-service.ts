@@ -125,7 +125,7 @@ async function selectCommands(whereClause: string, parameters: unknown[]): Promi
        r.rack_number,
        f.id::text AS farm_id,
        ac.row,
-       ac.column,
+       ac."column",
        ac.actuator_type,
        ac.action,
        ac.parameters::json AS parameters,
@@ -177,7 +177,7 @@ export async function createActuatorCommand(
       `INSERT INTO actuator_commands (
          rack_id,
          row,
-         column,
+         "column",
          actuator_type,
          action,
          parameters,
@@ -253,7 +253,7 @@ export async function updateActuatorCommandStatus(
      RETURNING
        id,
        row,
-       column,
+       "column",
        actuator_type,
        action,
        parameters::json AS parameters,

@@ -107,7 +107,20 @@ async function publishActuatorCommand(command: ActuatorCommandRecord): Promise<v
   }
 
   try {
-    await publishAsync(topic, JSON.stringify(command.parameters ?? {}));
+    // Extract the command value - gateway expects a number
+    let commandValue = command.command_value ?? 5; // Default value of 5
+    
+    // Try to extract from parameters if command_value is null
+    if (command.command_value === null && command.parameters) {
+      const params = command.parameters;
+      commandValue = (params.value as number) ?? 
+                     (params.intensity as number) ?? 
+                     (params.duration as number) ?? 
+                     5;
+    }
+
+    console.log(`Publishing actuator command ${command.id} to ${topic} with value ${commandValue}`);
+    await publishAsync(topic, JSON.stringify(commandValue));
     await updateActuatorCommandStatus(command.id, "sent");
   } catch (error) {
   console.error(`Failed to publish actuator command ${command.id}`, error);
@@ -130,7 +143,25 @@ function buildActuatorTopic(command: ActuatorCommandRecord): string | null {
     return null;
   }
 
-  return `greengrow/${command.farm_id}/${command.rack_id}/${command.row}/${command.column}/${command.actuator_type}/${command.action}`;
+  // Map internal actuator types to MQTT actuator names
+  const actuatorMap: Record<string, string> = {
+    water: "water_pump",
+    light: "lamp"
+  };
+
+  // Map internal actions to MQTT action names
+  const actionMap: Record<string, string> = {
+    water: "spray_water",
+    light: "set_light_level"
+  };
+
+  const actuator = actuatorMap[command.actuator_type] ?? command.actuator_type;
+  const action = actionMap[command.action] ?? command.action;
+
+  const commandVal = `greengrow/${command.farm_id}/${command.rack_id}/${command.row}/${command.column}/${actuator}/${action}`;
+  console.log(`Built actuator topic: ${commandVal}`);
+  return commandVal;
+
 }
 
 function publishAsync(topic: string, message: string): Promise<void> {

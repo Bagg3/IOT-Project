@@ -1,7 +1,6 @@
 ﻿import { type CellSnapshot } from '../lib';
-import { activateWater, adjustLight } from '../lib/actuator';
-import { useHistoricalData } from '../hooks/useHistoricalData';
-import { useState } from 'react';
+import { useHistoricalData, useActivateWater, useAdjustLight } from '../hooks';
+import { useEffect } from 'react';
 import { formatHistoricalData } from '../lib/plantDetailsHelpers';
 import { PlantReadings } from './plant-details/PlantReadings';
 import { ActuatorButtons } from './plant-details/ActuatorButtons';
@@ -13,8 +12,8 @@ interface PlantDetailsProps {
 }
 
 export default function PlantDetails({ cell, rackNumber }: PlantDetailsProps) {
-  const [waterStatus, setWaterStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-  const [lightStatus, setLightStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const waterMutation = useActivateWater();
+  const lightMutation = useAdjustLight();
 
   const { data: historicalData, isLoading: isHistoryLoading } = useHistoricalData(
     rackNumber ?? null,
@@ -29,41 +28,51 @@ export default function PlantDetails({ cell, rackNumber }: PlantDetailsProps) {
   console.log(`[PlantDetails] Historical data:`, historicalData);
   console.log(`[PlantDetails] Chart data:`, chartData);
 
-  const handleWaterAction = async () => {
-    setWaterStatus('loading');
-    try {
-      const response = await activateWater(rackNumber ?? 1, cell.row, cell.column);
-      if (response.success) {
-        setWaterStatus('success');
-        setTimeout(() => setWaterStatus('idle'), 2000);
-      } else {
-        setWaterStatus('error');
-        setTimeout(() => setWaterStatus('idle'), 2000);
-      }
-    } catch (error) {
-      console.error('[UI] Water action failed:', error);
-      setWaterStatus('error');
-      setTimeout(() => setWaterStatus('idle'), 2000);
-    }
+  const handleWaterAction = () => {
+    if (rackNumber === null || rackNumber === undefined) return;
+    
+    waterMutation.mutate({
+      rackNumber,
+      row: cell.row,
+      column: cell.column
+    });
   };
 
-  const handleLightAction = async () => {
-    setLightStatus('loading');
-    try {
-      const response = await adjustLight(rackNumber ?? 1, cell.row, cell.column);
-      if (response.success) {
-        setLightStatus('success');
-        setTimeout(() => setLightStatus('idle'), 2000);
-      } else {
-        setLightStatus('error');
-        setTimeout(() => setLightStatus('idle'), 2000);
-      }
-    } catch (error) {
-      console.error('[UI] Light action failed:', error);
-      setLightStatus('error');
-      setTimeout(() => setLightStatus('idle'), 2000);
-    }
+  const handleLightAction = () => {
+    if (rackNumber === null || rackNumber === undefined) return;
+    
+    lightMutation.mutate({
+      rackNumber,
+      row: cell.row,
+      column: cell.column
+    });
   };
+
+  // Map mutation states to status for backward compatibility
+  const waterStatus = waterMutation.isPending ? 'loading' 
+    : waterMutation.isSuccess ? 'success'
+    : waterMutation.isError ? 'error'
+    : 'idle';
+
+  const lightStatus = lightMutation.isPending ? 'loading'
+    : lightMutation.isSuccess ? 'success'
+    : lightMutation.isError ? 'error'
+    : 'idle';
+
+  // Auto-reset success/error states after 2 seconds
+  useEffect(() => {
+    if (waterMutation.isSuccess || waterMutation.isError) {
+      const timer = setTimeout(() => waterMutation.reset(), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [waterMutation.isSuccess, waterMutation.isError, waterMutation]);
+
+  useEffect(() => {
+    if (lightMutation.isSuccess || lightMutation.isError) {
+      const timer = setTimeout(() => lightMutation.reset(), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [lightMutation.isSuccess, lightMutation.isError, lightMutation]);
 
   return (
     <div className='space-y-3'>

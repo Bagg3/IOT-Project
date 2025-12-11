@@ -7,7 +7,8 @@ const mqttClient = mqtt.connect(config.MQTT_URL);
 
 mqttClient.on("connect", () => {
     console.log(`Gateway connected to MQTT broker at ${config.MQTT_URL}`);
-    const waterPumpTopicPattern = `greengrow/${config.FARM_ID}/${config.RACK_ID}/+/+/water_pump/+`;
+    // Subscribe to all farms/racks with wildcards, filter in message handler
+    const waterPumpTopicPattern = `greengrow/+/+/+/+/water_pump/+`;
     mqttClient.subscribe(waterPumpTopicPattern, (error: Error | null) => {
         if (error) {
             console.error("Failed to subscribe to topic", error);
@@ -15,7 +16,7 @@ mqttClient.on("connect", () => {
             console.log(`Subscribed to ${waterPumpTopicPattern}`);
         }
     });
-    const lampTopicPattern = `greengrow/${config.FARM_ID}/${config.RACK_ID}/+/+/lamp/+`;
+    const lampTopicPattern = `greengrow/+/+/+/+/lamp/+`;
     mqttClient.subscribe(lampTopicPattern, (error: Error | null) => {
         if (error) {
             console.error("Failed to subscribe to topic", error);
@@ -30,13 +31,27 @@ mqttClient.on("error", (error: Error) => {
 });
 
 mqttClient.on("message", async (topic, payload) => {
+    console.log(`Received MQTT message on topic ${topic}: ${payload.toString()}`);
     try {
         const parts = topic.split("/");
         if (parts.length !== 7) {
+            console.warn(`Invalid topic structure: ${topic}`);
             return;
         }
 
-        const [, , , row, column, actuator, action] = parts;
+        const [, farmId, rackId, row, column, actuator, action] = parts;
+        
+        // Log what we're filtering for
+        console.log(`Gateway config: FARM_ID=${config.FARM_ID}, RACK_ID=${config.RACK_ID}`);
+        console.log(`Message for: farmId=${farmId}, rackId=${rackId}, row=${row}, col=${column}`);
+        
+        // For now, accept all messages (you can add filtering later if needed)
+        // If you want to filter: uncomment below
+        // if (farmId !== config.FARM_ID || rackId !== config.RACK_ID) {
+        //     console.log(`Ignoring message for different farm/rack`);
+        //     return;
+        // }
+
         const value = JSON.parse(payload.toString());
 
         const receivedParams = {
@@ -54,8 +69,8 @@ mqttClient.on("message", async (topic, payload) => {
             throw new Error("Invalid CommandParams");
         }
 
+        console.log(`Executing command: ${actuator} ${action} with value ${value}`);
         handleCommand(parsed.data);
-
 
     } catch (error) {
         console.error("Failed to handle MQTT message", error);

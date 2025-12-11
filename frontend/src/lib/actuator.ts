@@ -1,7 +1,11 @@
 /**
  * Actuator API - Controls plant actuators (water pump, light adjustment)
- * Currently mocks POST calls to the backend with console logging
  */
+
+/**
+ * Get the API base URL from environment variables (same as api.ts)
+ */
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
 
 export interface ActuatorRequest {
   rackNumber: number;
@@ -33,21 +37,25 @@ export async function activateWater(
     timestamp: new Date().toISOString()
   };
 
-  console.log("[Actuator API] POST /actuators/water", payload);
+  const url = `${API_BASE_URL}/actuators/water`;
+  console.log("[Actuator API] POST", url, payload);
 
-  // Mock API call - in production, this would be:
-  // const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/actuators/water`, {
-  //   method: "POST",
-  //   headers: { "Content-Type": "application/json" },
-  //   body: JSON.stringify(payload)
-  // });
-  // return response.json();
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
 
-  return {
-    success: true,
-    message: `Water pump activated for Rack ${rackNumber}, Row ${row}, Col ${column}`,
-    data: payload
-  };
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("[Actuator API] Error activating water:", error);
+    throw error;
+  }
 }
 
 /**
@@ -59,30 +67,32 @@ export async function adjustLight(
   column: number,
   intensity?: number
 ): Promise<ActuatorResponse> {
-  const payload: ActuatorRequest = {
+  const payload: ActuatorRequest & { parameters?: { intensity: number } } = {
     rackNumber,
     row,
     column,
     action: "light",
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    ...(intensity !== undefined && { parameters: { intensity } })
   };
 
-  console.log("[Actuator API] POST /actuators/light", {
-    ...payload,
-    ...(intensity !== undefined && { intensity })
-  });
+  const url = `${API_BASE_URL}/actuators/light`;
+  console.log("[Actuator API] POST", url, payload);
 
-  // Mock API call - in production, this would be:
-  // const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/actuators/light`, {
-  //   method: "POST",
-  //   headers: { "Content-Type": "application/json" },
-  //   body: JSON.stringify({ ...payload, intensity })
-  // });
-  // return response.json();
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
 
-  return {
-    success: true,
-    message: `Light adjusted for Rack ${rackNumber}, Row ${row}, Col ${column}${intensity !== undefined ? ` to ${intensity}%` : ""}`,
-    data: { ...payload, ...(intensity !== undefined && { intensity }) }
-  };
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("[Actuator API] Error adjusting light:", error);
+    throw error;
+  }
 }

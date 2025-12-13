@@ -10,6 +10,7 @@ const router = Router();
 
 const rackIdentifierSchema = z.object({ rackId: z.string().trim().min(1) });
 
+// Get all racks with their latest snapshots
 router.get(
   "/racks",
   async (_request: Request, response: Response, next: NextFunction) => {
@@ -22,6 +23,7 @@ router.get(
   }
 );
 
+// Get specific rack by ID with its latest snapshot
 router.get(
   "/racks/:rackId",
   async (request: Request, response: Response, next: NextFunction) => {
@@ -41,6 +43,7 @@ router.get(
   }
 );
 
+// Get plant readings for a specific rack
 router.get(
   "/racks/:rackId/plants",
   async (request: Request, response: Response, next: NextFunction) => {
@@ -73,6 +76,8 @@ const historyQuerySchema = z.object({
   hours: z.coerce.number().int().positive().default(24)
 });
 
+// Get historical data for a specific plant location in a rack
+// Takes query parameter 'hours' to specify how many hours back to retrieve data for (default: 24)
 router.get(
   "/racks/:rackId/locations/:row/:column/history",
   async (request: Request, response: Response, next: NextFunction) => {

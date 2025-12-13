@@ -1,7 +1,4 @@
-/**
- * Helper functions and utilities for plant details display
- */
-
+// Helpers for formatting plant details and status indicators
 export function getStatusColor(moisturePercent: number | null): string {
   if (moisturePercent === null) {
     return "bg-slate-100 border-slate-300";

@@ -6,11 +6,8 @@ import {
   type Plant
 } from "../lib";
 
-/**
- * Hook for fetching real-time sensor data with configurable polling interval
- * Fetches latest sensor readings from all plants in a rack
- * Default polling interval: 5 seconds (5000ms)
- */
+// Hook for fetching real-time sensor data with configurable polling interval
+// Fetches latest sensor readings from all plants in a rack
 export function useSensorData(
   rackNumber: number | null,
   pollInterval: number = 5000
@@ -31,11 +28,8 @@ export function useSensorData(
   });
 }
 
-/**
- * Hook for fetching raw sensor readings (unprocessed)
- * Useful when you need the raw reading data before mapping to cells
- * Default polling interval: 5 seconds
- */
+// Hook for fetching raw sensor readings (unprocessed)
+// Useful when you need the raw reading data before mapping to cells
 export function useRawSensorReadings(
   rackNumber: number | null,
   pollInterval: number = 5000
@@ -55,21 +49,13 @@ export function useRawSensorReadings(
   });
 }
 
-/**
- * Aggregated data for a single cell - useful for detailed cell views
- */
+// Aggregated data for a single cell - useful for detailed cell views
 export interface CellMetrics {
   cell: CellSnapshot;
   lastUpdated: string;
 }
 
-/**
- * Hook to get aggregated metrics for a specific cell
- */
-/**
- * Hook for fetching cell-specific metrics
- * Default polling interval: 5 seconds
- */
+// Hook to get aggregated metrics for a specific cell
 export function useCellMetrics(
   cell: CellSnapshot | null,
   rackNumber: number | null,

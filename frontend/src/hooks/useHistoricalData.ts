@@ -1,11 +1,7 @@
 import { useQuery, type UseQueryResult } from "@tanstack/react-query";
 import { fetchPlantHistory, type HistoricalDataPoint } from "../lib";
 
-/**
- * Hook for fetching historical sensor data for a plant cell
- * Returns historical data from the backend API
- * Default polling interval: 10 seconds (10000ms) to show trending updates
- */
+// Hook for fetching historical sensor data for a plant cell
 export function useHistoricalData(
   rackNumber: number | null,
   row: number | null,

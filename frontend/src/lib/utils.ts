@@ -2,16 +2,12 @@ import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import type { Plant, CellSnapshot } from "./types";
 
-/**
- * Combine and merge class names for styling
-*/
+// Combine and merge class names for styling
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-/**
- * Parse percentage value from various input formats
- */
+// Parse percentage value from various input formats
 export function parsePercentage(input: unknown): number | null {
   if (typeof input === "number" && Number.isFinite(input)) {
     return input;
@@ -27,9 +23,7 @@ export function parsePercentage(input: unknown): number | null {
   return null;
 }
 
-/**
- * Transform plant data to cell snapshots for UI display
- */
+// Transform plant data to cell snapshots for UI display
 export function mapReadingsToCells(plants: Plant[]): CellSnapshot[] {
   return plants
     .map((plant) => ({

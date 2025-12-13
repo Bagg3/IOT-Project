@@ -1,10 +1,4 @@
-/**
- * Actuator API - Controls plant actuators (water pump, light adjustment)
- */
 
-/**
- * Get the API base URL from environment variables (same as api.ts)
- */
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
 
 export interface ActuatorRequest {
@@ -21,9 +15,7 @@ export interface ActuatorResponse {
   data?: ActuatorRequest | (ActuatorRequest & { intensity?: number });
 }
 
-/**
- * Activate water pump for a specific plant cell
- */
+ // Activate water pump for a specific plant cell
 export async function activateWater(
   rackNumber: number,
   row: number,
@@ -58,9 +50,7 @@ export async function activateWater(
   }
 }
 
-/**
- * Adjust light for a specific plant cell
- */
+ // Adjust light for a specific plant cell
 export async function adjustLight(
   rackNumber: number,
   row: number,

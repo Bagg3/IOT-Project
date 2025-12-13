@@ -30,6 +30,7 @@ const rackLocationParamsSchema = z.object({
   column: z.coerce.number().int().positive()
 });
 
+// Create a new plant at a specific rack location
 router.post(
   "/racks/:rackId/locations/:row/:column/plants",
   async (request: Request, response: Response, next: NextFunction) => {
@@ -55,6 +56,7 @@ router.post(
   }
 );
 
+// Update plant details
 router.put(
   "/plants/:plantId",
   async (request: Request, response: Response, next: NextFunction) => {
@@ -70,6 +72,7 @@ router.put(
   }
 );
 
+// Delete a plant
 router.delete(
   "/plants/:plantId",
   async (request: Request, response: Response, next: NextFunction) => {

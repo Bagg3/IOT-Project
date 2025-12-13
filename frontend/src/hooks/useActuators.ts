@@ -14,10 +14,7 @@ interface LightMutationParams {
   intensity?: number;
 }
 
-/**
- * Hook for activating water pump with React Query mutation
- * Automatically invalidates sensor data after successful activation
- */
+ // Hook for activating water pump with React Query mutation
 export function useActivateWater(): UseMutationResult<
   ActuatorResponse,
   Error,
@@ -41,11 +38,8 @@ export function useActivateWater(): UseMutationResult<
   });
 }
 
-/**
- * Hook for adjusting light with React Query mutation
- * Automatically invalidates sensor data after successful adjustment
- */
-export function useAdjustLight(): UseMutationResult<
+ // Hook for adjusting light with React Query mutation
+ export function useAdjustLight(): UseMutationResult<
   ActuatorResponse,
   Error,
   LightMutationParams

@@ -6,10 +6,7 @@ interface DashboardOverviewProps {
   rackNumber: number | null;
 }
 
-/**
- * High-level overview dashboard showing key metrics for entire rack
- * Displays health status of the rack at a glance
- */
+// Dashboard overview component showing key metrics about plant health
 export function DashboardOverview({ rackNumber }: DashboardOverviewProps) {
   const { data: cells, isLoading } = useSensorData(rackNumber);
 

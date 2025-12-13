@@ -21,6 +21,7 @@ const locationTriggerSchema = z.object({
   triggered_by: z.string().trim().min(1).optional()
 });
 
+// Trigger actuator by its ID
 router.post(
   "/actuators/:actuatorId/commands",
   async (request: Request, response: Response, next: NextFunction) => {
@@ -57,6 +58,7 @@ router.post(
   }
 );
 
+// Trigger water actuator by rack location
 router.post(
   "/actuators/water",
   async (request: Request, response: Response, next: NextFunction) => {
@@ -94,6 +96,7 @@ router.post(
   }
 );
 
+// Trigger light actuator by rack location
 router.post(
   "/actuators/light",
   async (request: Request, response: Response, next: NextFunction) => {

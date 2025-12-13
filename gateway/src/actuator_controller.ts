@@ -2,11 +2,6 @@ import z from "zod";
 import { execSync } from "child_process";
 import { config } from "./config/env";
 
-// Sleep helper
-function sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
 export const handleCommandParamsSchema = z.object({
     row: z.string().transform(str => Number(str)),
     column: z.string().transform(str => Number(str)),
@@ -27,10 +22,14 @@ export function handleCommand({ row, column, actuator, action, value }: handleCo
     }
 }
 
+function sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 async function handleWaterPump(value: number) {
     console.log("Activating water pump for", value, "seconds");
     execSync(`bun ${config.SENSOR_SCRIPT_PATH}water_actuator.ts 5`);
-    await sleep(value * 1000); // Sleep x seconds
+    await sleep(value * 1000);
     execSync(`bun ${config.SENSOR_SCRIPT_PATH}water_actuator.ts 0`);
 }
 

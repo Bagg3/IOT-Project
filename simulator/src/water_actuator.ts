@@ -1,8 +1,3 @@
-/**
- * Water Actuator Simulator
- * - Logs Commands: 0–5 V
- */
-
 const WaterArgs = process.argv.slice(2);
 
 if (WaterArgs.length === 0) {
@@ -17,7 +12,6 @@ if (isNaN(WaterVoltage)) {
     process.exit(1);
 }
 
-// Clamp WaterVoltage to 0–5 V
 const WaterVoltageClamped = Math.max(0, Math.min(5, WaterVoltage));
 
 console.log(`Water actuator: ${WaterVoltageClamped.toFixed(2)} V`);

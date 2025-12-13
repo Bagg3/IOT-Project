@@ -10,24 +10,42 @@ IoT-powered vertical farming demo consisting of a Bun/TypeScript backend, MQTT g
 
 ## Quick Start
 
-1. Copy `.env.example` to `.env` and tweak if needed.
-2. Start infrastructure:
+1. Build and start all services:
    ```pwsh
-   docker compose up -d
+   docker compose up --build
    ```
-3. Apply database schema:
+
+2. Open http://localhost:8080 to access the dashboard.
+
+> **Note:** The backend automatically runs database migrations and seeds data on startup.
+
+## What Gets Started
+
+- PostgreSQL database (port 5432)
+- Mosquitto MQTT broker (port 1883)
+- Backend API (port 3000) - auto-migrates & seeds database
+- Frontend dashboard (port 8080)
+- 5 Gateway instances (with integrated simulators) for racks 1-5
+
+## Development Mode (Local)
+
+If you want to develop locally without Docker:
+
+1. Start only infrastructure:
    ```pwsh
-   bunx psql -h localhost -U greengrow -d greengrow -f backend/migrations/schema.sql
+   docker compose up -d postgres mosquitto
    ```
-4. Install dependencies (`bun install`) within each workspace (`backend`, `gateway`, `simulator`, `frontend`).
-5. Run services (each in its own terminal):
+
+2. Install dependencies and run services:
    ```pwsh
+   # In separate terminals
    bun run --cwd backend dev
    bun run --cwd gateway dev
    bun run --cwd simulator dev
    bun run --cwd frontend dev
    ```
-6. Open `http://localhost:5173` to access the dashboard.
+
+3. Open http://localhost:5173 for local dev server.
 
 ## Testing The Flow
 

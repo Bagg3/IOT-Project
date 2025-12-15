@@ -65,13 +65,19 @@ router.post(
     try {
       const payload = locationTriggerSchema.parse(request.body);
 
+      // Set default value if not provided
+      const parameters = payload.parameters ?? {};
+      if (!parameters.value) {
+        parameters.value = 5; // Default: 5 seconds
+      }
+
       const command = await createActuatorCommand({
         rack_id: payload.rackNumber.toString(),
         row: payload.row,
         column: payload.column,
         actuator_type: "water",
         action: "water",
-        parameters: payload.parameters ?? null,
+        parameters,
         triggered_by: payload.triggered_by ?? "dashboard"
       });
 
@@ -103,13 +109,19 @@ router.post(
     try {
       const payload = locationTriggerSchema.parse(request.body);
 
+      // Set default value if not provided
+      const parameters = payload.parameters ?? {};
+      if (!parameters.value) {
+        parameters.value = 75; // Default: 75%
+      }
+
       const command = await createActuatorCommand({
         rack_id: payload.rackNumber.toString(),
         row: payload.row,
         column: payload.column,
         actuator_type: "light",
         action: "light",
-        parameters: payload.parameters ?? null,
+        parameters,
         triggered_by: payload.triggered_by ?? "dashboard"
       });
 

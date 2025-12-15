@@ -69,15 +69,15 @@ async function handleSensorMessage(topic: string, payload: Buffer): Promise<void
     return;
   }
 
-  let parsed: unknown;
+  let sensorData: { measurement: string; value: unknown };
   try {
-    parsed = JSON.parse(payload.toString("utf8"));
+    sensorData = JSON.parse(payload.toString("utf8"));
   } catch (error) {
   console.warn(`Unable to parse MQTT payload for topic ${topic}`, error);
     return;
   }
 
-  const value = typeof parsed === "object" && parsed !== null ? (parsed as Record<string, unknown>) : { value: parsed };
+  const value = { [sensorData.measurement]: sensorData.value };
 
   const reading: CreateSensorReadingInput = {
     rack_id: rackId,
@@ -107,20 +107,19 @@ async function publishActuatorCommand(command: ActuatorCommandRecord): Promise<v
   }
 
   try {
-    // Extract the command value - gateway expects a number
-    let commandValue = command.command_value ?? 5; // Default value of 5
-    
-    // Try to extract from parameters if command_value is null
-    if (command.command_value === null && command.parameters) {
-      const params = command.parameters;
-      commandValue = (params.value as number) ?? 
-                     (params.intensity as number) ?? 
-                     (params.duration as number) ?? 
-                     5;
-    }
+    // Build structured payload based on actuator type
+    const payload = command.actuator_type === "water"
+      ? {
+          action: "spray_water",
+          value: (command.parameters?.value as number) ?? 5
+        }
+      : {
+          action: "set_light_level",
+          value: (command.parameters?.value as number) ?? 75
+        };
 
-    console.log(`Publishing actuator command ${command.id} to ${topic} with value ${commandValue}`);
-    await publishAsync(topic, JSON.stringify(commandValue));
+    console.log(`Publishing actuator command ${command.id} to ${topic}:`, payload);
+    await publishAsync(topic, JSON.stringify(payload));
     await updateActuatorCommandStatus(command.id, "sent");
   } catch (error) {
   console.error(`Failed to publish actuator command ${command.id}`, error);

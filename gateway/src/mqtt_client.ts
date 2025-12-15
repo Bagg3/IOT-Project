@@ -45,12 +45,18 @@ mqttClient.on("message", async (topic, payload) => {
         console.log(`Gateway config: FARM_ID=${config.FARM_ID}, RACK_ID=${config.RACK_ID}`);
         console.log(`Message for: farmId=${farmId}, rackId=${rackId}, row=${row}, col=${column}`);
 
-        const value = JSON.parse(payload.toString());
+        // Parse structured payload
+        const payloadData = JSON.parse(payload.toString());
+        
+        // Extract value from the payload
+        const value: number = typeof payloadData.value === "number" 
+            ? payloadData.value 
+            : (typeof payloadData === "number" ? payloadData : 5);
 
         const receivedParams = {
             row,
             column,
-            action,
+            action: payloadData.action || action,
             actuator,
             value
         };
@@ -62,7 +68,7 @@ mqttClient.on("message", async (topic, payload) => {
             throw new Error("Invalid CommandParams");
         }
 
-        console.log(`Executing command: ${actuator} ${action} with value ${value}`);
+        console.log(`Executing command: ${actuator} ${payloadData.action || action} with value ${value}`);
         handleCommand(parsed.data);
 
     } catch (error) {

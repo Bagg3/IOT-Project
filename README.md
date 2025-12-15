@@ -4,15 +4,28 @@ IoT-powered vertical farming demo consisting of a Bun/TypeScript backend, MQTT g
 
 ## Prerequisites
 
-- Docker (for PostgreSQL and Mosquitto)
+For running the project:
+- Docker (with Docker Compose)
+
+For local development (optional):
 - Bun >= 1.1.0
-- Node.js 18+ (for tooling around Vite/Tailwind if needed)
+- Docker(for Postgres and Mosquitto)
 
 ## Quick Start
 
-1. Build and start all services:
-   ```pwsh
+1. **First time or after code changes:**
+```pwsh
    docker compose up --build
+```
+
+2. **Subsequent starts (no changes):**
+```pwsh
+   docker compose up
+```
+
+Or do it detach mode:
+   ```pwsh
+   docker compose up --build -d
    ```
 
 2. Open http://localhost:8080 to access the dashboard.

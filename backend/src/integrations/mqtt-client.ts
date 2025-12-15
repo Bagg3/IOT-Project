@@ -69,15 +69,15 @@ async function handleSensorMessage(topic: string, payload: Buffer): Promise<void
     return;
   }
 
-  let parsed: unknown;
+  let sensorData: { measurement: string; value: unknown };
   try {
-    parsed = JSON.parse(payload.toString("utf8"));
+    sensorData = JSON.parse(payload.toString("utf8"));
   } catch (error) {
   console.warn(`Unable to parse MQTT payload for topic ${topic}`, error);
     return;
   }
 
-  const value = typeof parsed === "object" && parsed !== null ? (parsed as Record<string, unknown>) : { value: parsed };
+  const value = { [sensorData.measurement]: sensorData.value };
 
   const reading: CreateSensorReadingInput = {
     rack_id: rackId,

@@ -81,7 +81,16 @@ function parseJsonValue(value: unknown): Record<string, unknown> {
 }
 
 function extractReadingValue(payload: Record<string, unknown>): number | null {
-  const candidates = [payload.value, payload.reading, payload.level];
+  // Check common field names for sensor values
+  const candidates = [
+    payload.value,
+    payload.reading,
+    payload.level,
+    payload.moisture_level,
+    payload.light_level,
+    payload.plant_color
+  ];
+  
   for (const candidate of candidates) {
     if (typeof candidate === "number" && Number.isFinite(candidate)) {
       return candidate;

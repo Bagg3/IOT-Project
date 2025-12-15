@@ -2,9 +2,7 @@ import type { RackSummary, Plant, HistoricalDataPoint } from "./types";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
 
-/**
- * Generic API request handler with error handling
- */
+// Generic API request handler with error handling
 async function apiRequest<T>(endpoint: string): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
   
@@ -28,34 +26,17 @@ async function apiRequest<T>(endpoint: string): Promise<T> {
   }
 }
 
-/**
- * Fetch all racks overview
- * GET /racks
- */
+// Fetch all racks overview (GET /racks)
 export async function fetchRacks(): Promise<RackSummary[]> {
   return apiRequest<RackSummary[]>("/racks");
 }
 
-/**
- * Fetch latest sensor readings for a specific rack
- * GET /racks/{rackId}/plants
- * 
- * Note: This endpoint expects rackId to be either UUID or rack number
- * We'll use rack_number for consistency with the frontend
- */
+// Fetch latest sensor readings for a rack (GET /racks/{rackId}/plants)
 export async function fetchLatestSensorReadings(rackNumber: number): Promise<Plant[]> {
   return apiRequest<Plant[]>(`/racks/${rackNumber}/plants`);
 }
 
-/**
- * Fetch historical data for a specific plant location (last hour)
- * GET /racks/{rackId}/locations/{row}/{column}/history?hours=1
- * 
- * @param rackNumber - The rack number
- * @param row - Plant row position
- * @param column - Plant column position
- * @param hours - Number of hours of history to fetch (default: 1 for last hour)
- */
+// Fetch historical data for a plant location (GET /racks/{rackId}/locations/{row}/{column}/history?hours=1)
 export async function fetchPlantHistory(
   rackNumber: number,
   row: number,
@@ -92,18 +73,12 @@ export async function fetchPlantHistory(
   }
 }
 
-/**
- * Fetch specific rack details (optional - if you need rack metadata)
- * GET /racks/{rackId}
- */
+// Fetch specific rack details (GET /racks/{rackId})
 export async function fetchRackDetails(rackNumber: number): Promise<RackSummary> {
   return apiRequest<RackSummary>(`/racks/${rackNumber}`);
 }
 
-/**
- * Convenience function to fetch last hour of plant history data
- * GET /racks/{rackId}/locations/{row}/{column}/history?hours=1
- */
+// Fetch last hour of plant history data (GET /racks/{rackId}/locations/{row}/{column}/history?hours=1)
 export async function fetchPlantLastHour(
   rackNumber: number,
   row: number,
@@ -112,44 +87,26 @@ export async function fetchPlantLastHour(
   return fetchPlantHistory(rackNumber, row, column, 1);
 }
 
-/**
- * Debug function to test API connectivity and endpoint availability
- * Use this in the browser console to test if the API is working
- */
+// Debug function to test API connectivity and endpoint availability
 export async function debugApiEndpoint(
   rackNumber: number = 1,
   row: number = 0,
   column: number = 0
-): Promise<void> {
-  console.log(`[DEBUG] Testing API connectivity...`);
-  console.log(`[DEBUG] API Base URL: ${API_BASE_URL}`);
-  
+): Promise<void> {  
   try {
     // Test basic connectivity
-    console.log(`[DEBUG] 1. Testing basic API connectivity with /racks endpoint...`);
     const racks = await fetchRacks();
-    console.log(`[DEBUG] Basic API connection successful. Found ${racks.length} racks:`, racks);
     
     // Test plant history endpoint
-    console.log(`[DEBUG] 2. Testing plant history endpoint...`);
     const history = await fetchPlantHistory(rackNumber, row, column, 1);
-    console.log(`[DEBUG] Plant history request completed. Data points: ${history.length}`);
     
     if (history.length > 0) {
-      console.log(`[DEBUG] Sample history data:`, history[0]);
+      console.log(`Sample history data:`, history[0]);
     } else {
-      console.log(`[DEBUG]  No historical data returned - this might indicate:`);
-      console.log(`[DEBUG]    - No data exists for Rack ${rackNumber}, Row ${row}, Col ${column}`);
-      console.log(`[DEBUG]    - Backend endpoint expects different parameter format`);
-      console.log(`[DEBUG]    - Row/column indexing mismatch (try 1-based indexing)`);
+      console.log(`No historical data returned - this might indicate:`);
     }
     
   } catch (error) {
-    console.error(`[DEBUG] API test failed:`, error);
-    console.log(`[DEBUG] Troubleshooting steps:`);
-    console.log(`[DEBUG] 1. Check if backend server is running`);
-    console.log(`[DEBUG] 2. Verify VITE_API_BASE_URL in .env.local: ${API_BASE_URL}`);
-    console.log(`[DEBUG] 3. Check browser network tab for failed requests`);
-    console.log(`[DEBUG] 4. Verify CORS configuration on backend`);
+    console.error(`API test failed:`, error);
   }
 }

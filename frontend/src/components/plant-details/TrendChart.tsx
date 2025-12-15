@@ -34,7 +34,6 @@ export function TrendChart({ chartData, isLoading, timeInterval, onTimeIntervalC
 
   return (
     <div className="space-y-1">
-      {/* Header with title and time selector */}
       <div className='flex items-center justify-between gap-2'>
         <h3 className='text-xs font-semibold text-slate-700 uppercase tracking-wide'>
           {getIntervalLabel()} Trends
@@ -57,7 +56,6 @@ export function TrendChart({ chartData, isLoading, timeInterval, onTimeIntervalC
         </div>
       </div>
 
-      {/* Chart or empty state */}
       {chartData.length === 0 ? (
         <div className="flex h-32 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-xs text-slate-500">
           {isLoading ? "Loading…" : "No data"}
@@ -124,7 +122,6 @@ export function TrendChart({ chartData, isLoading, timeInterval, onTimeIntervalC
             </LineChart>
           </ResponsiveContainer>
 
-          {/* Color History Visualization */}
           <ColorHistory chartData={chartData} />
         </div>
       )}
